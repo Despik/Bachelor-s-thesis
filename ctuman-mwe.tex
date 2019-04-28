@@ -1,0 +1,165 @@
+\documentclass{ctuthesis}
+
+\ctusetup{
+	xdoctype = B,
+	xfaculty = F3,
+	mainlanguage = english,
+	titlelanguage = english,
+	title-english = {Expedition scheduling in an automated warehouse},
+	title-czech = {Rozvrhování vyskladňování z automatizovaného skladu},
+	department-english = {Department of Computer Science},
+	author = {Jan Kalina},
+	supervisor = {Ing. Martin Schaefer},
+	supervisor-address = {Unknown,\\ Zářivá 232,\\
+	  12000 Praha 2},
+	  day = 13,
+	month = 5,
+	year = 2019,
+	keywords-english = {scheduling, automated warehouse, optimization, simulation},
+}
+
+\ctuprocess
+\begin{thanks}
+
+TBD
+\end{thanks}
+
+\begin{declaration}
+
+Prohlašuji, že jsem předloženou práci vypracoval
+samostatně a že jsem uvedl veškeré použité informační zdroje v souladu
+s Metodickým pokynem o dodržování etických principů při přípravě vysokoškolských
+závěrečných prací.
+\medskip
+
+
+V Praze, \ctufield{day}.~\monthinlanguage{second}~\ctufield{year}
+
+\end{declaration}
+\begin{abstract-english}
+This thesis deals with optimization problem of expedition scheduling in an automated warehouse with given set of parameters, requirements and set of items to dispatch in a day. Relevant scheduling problems and their solutions are discussed. Optimization method and objectives are then proposed for the given type of an automated warehouse. Proposed method is implemented in provided simulation tool and evaluated based on it's performance in the simulation.
+
+\end{abstract-english}
+
+
+
+\begin{abstract-czech}
+Rozvíjíme \ldots
+\end{abstract-czech}
+
+\begin{document}
+
+\maketitle
+
+\chapter{Introduction}
+
+Scheduling is well studied and practical topic. It is widely used in manufacturing facilities, warehouses, which are discussed in this theses, and many other industries where good scheduling can play tremendous role in their success. Despite it's importance and years of research, scheduling is quite challenging problem, especially when it comes to real world problems where finding an optimal schedule is usually nearly impossible due to it's high computational complexity. 
+
+Since the beginning of research in scheduling, many methods and approaches were developed for finding schedules close to optimal schedule in reasonable time, but what is a good or optimal schedule? Determining objective of a schedule is problem on it own. Usual objective of a scheduling is to minimize duration of a schedule, but this objective alone is not sufficient because of stochastic nature of real world problems and custom requirements some facility may demand. Many facilities demand different and complex objectives. For example in case of our an automated warehouse, it may crucial to not only finish expedition in required time, but to also expedite items in required order. 
+
+In this thesis, general methods for solving scheduling problems relevant to scheduling an expedition of the given automated warehouse configuration are discussed. Then, method and an objective of a schedule for the given automated warehouse and scenario is proposed and finally proposed method is implemented and evaluated based on results from provided simulation tool. Basic structure and configuration of an automated warehouse were provided to me and are based on the real world problem.
+
+\section{Motivation}
+
+Goal of this thesis is to be able to create appropriate schedule in reasonable time for the given automated warehouse and integrate this schedule to provided simulation tool so that the created schedule can be observed in action and evaluated based on it. Properties to consider are prioritization of production handling, limited throughput and robustness to failure of individual robots.
+
+With a combination of the schedule and the simulation tool, we are also able to get data about capabilities of the warehouse itself, which is valuable information when designing an automated warehouse.
+
+\chapter{Problem statement}
+\section{Automated warehouse}
+To be able to properly state scheduling problem. We need to specify structure of the automated warehouse, type of stacker cranes which operate on it, how does expedition work and what other information is available.
+
+\subsection{Structure of the warehouse}
+
+The automated warehouse has given number of aisles. Each aisle has certain length and on each aisle operates a single stacker crane. On one side of each aisle are connected two conveyors. The first conveyor is moving items from an aisle to expedition ramp and the second is bringing in items from production. Before each item reaches the expedition ramp, it needs to be processed by scanner, which is located at the end of the first conveyor. Since scanner is processing items in given intervals, there has to be space between items on conveyor based on the speed of the conveyor and the duration of the interval. It creates bottleneck where throughput of a whole warehouse is limited by this scanner.
+
+
+PICTURE FROM SIMULATION TOOL
+\subsection{Stacker cranes}
+Stacker cranes store items from conveyor from production to free position on their aisle and unload items from their position on conveyor leading to the expedition ramp. Stacker crane can move only one item at the time. 
+\subsection{Expedition scenario}
+We consider expedition is spanned over part of a one day. During expedition, truck can arrive at the expedition ramp at scheduled time and demand certain number of items of different types. Which specific items will be expedited is known in advance. Stacker cranes then should be able start unloading demanded items, also at scheduled times. This process repeats throughout the expedition duration. 
+
+\subsection{Available information and notation}
+Several basic parameters provided for the given automated warehouse. These parameters include horizontal and vertical speeds and accelerations of stacker cranes, dimensions of a warehouse, speed and length of conveyors, duration of scanning an item, duration of grabbing an item from a conveyor, duration of putting an item on a conveyor and exact location of each item stored in the warehouse.
+
+From these parameters we are able to calculate data needed for describing machine scheduling model.
+\section{Notation}
+
+\noindent \textbf{Job} ($job_i$) A $job_i$ represents an item $i$ to be expedited. Since expedition items are known in advanc $job_i$ is already associated with one of the stacker cranes. 
+
+\noindent \textbf{Machine} ($m_i$) A $m_i$ represents a stacker crane.
+
+\noindent \textbf{Machine processing time} ($p_i$) Time which machine associated with $job_i$ needs to process $job_i$. In other words, time needed to unload an item $i$ from it's location to conveyor. This action consists of trip from conveyor to the item $i$, grabbing the item, trip back to conveyor and putting the item on it. Values of $p_i$ is calculated from speeds, accelerations and dimensions of the warehouse, but if production handling is taken into consideration, these values can become quite inaccurate since stacker crane may not always be at the same spot at the start of a job processing.
+
+\noindent \textbf{Scanning interval} ($interval$)
+
+\noindent \textbf{Traverse duration} ($traverse_i$)
+
+\noindent \textbf{Completion time} ($c_i$)
+
+\noindent \textbf{Start time} ($s_i$)
+
+\noindent \textbf{Stacker crane completion time} ($scc_i$)
+
+\noindent \textbf{Stacker crane start time} ($scs_i$)
+
+\noindent \textbf{Position in expedition} ($pos_i$)
+
+\noindent \textbf{TBD - expedition list, ... Add when needed} ($something_i$)
+
+
+\section{Scheduling problem}
+
+
+\subsection{Expedition in the automated warehouse as scheduling problem}
+
+\subsection{Machine scheduling model}
+Machine scheduling model 
+\chapter{Related work}
+\section{Complexity}
+\section{Overview of methods and approaches for finding optimal schedule}
+\section{Solving scheduling problems in practice}
+\subsection{Maybe example of FFLL algoritm?}
+\chapter{Proposed solution for our problem}
+\section{Objective}
+\section{Constraint satisfaction problem formulation}
+\section{Value of finding optimal solution}
+\section{Algorithm description}
+Heuristic construction algorithm
+
+1. Truck allocation
+
+2. Item dispatching
+
+3. Distribute available time as idle times
+
+4. Item dispatching again with idle times
+
+\section{Meta-heuristics}
+Local search (Tabu, simulated annealing)
+
+\chapter{Implementation}
+\section{Simulation environment}
+\section{Scheduler module}
+\chapter{Evaluation}
+\section{Performance}
+\section{Scenarios}
+\section{Comparison}
+\subsection{Comparison of plan and behavior in simulation}
+\subsection{Effect of objectives?}
+Mainly significance of idle times (at scanner or machines)
+\subsection{Comparison to greedy algorithm}
+\chapter{Conclusion}
+
+Lorep ipsum \cite{doe}
+
+\begin{thebibliography}{1}
+
+\bibitem{doe} J. Doe. \emph{Book on foobar.} Publisher X,
+ 2300.
+
+\end{thebibliography}
+
+\end{document}
+
