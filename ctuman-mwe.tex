@@ -92,11 +92,11 @@ From these parameters we are able to calculate data needed for describing machin
 
 \section{Notation}*
 
-\noindent \textbf{Job} ($job_i$) A $job_i$ represents an item $i$ to be expedited. Since expedition items are known in advanc $job_i$ is already associated with one of the stacker cranes. 
+\noindent \textbf{Job} ($job_i$) A $job_i$ represents an item $i$ to be expedited. Since expedition items are known in advance $job_i$ is already associated with one of the stacker cranes. 
 
 \noindent \textbf{Machine} ($m_i$) A $m_i$ represents a stacker crane or a scanner. 
 
-\noindent \textbf{Machine processing time} ($p_i$) Time which machine associated with $job_i$ needs to process $job_i$. In other words, time needed to unload an item $i$ from it's location to conveyor. This action consists of trip from conveyor to the item $i$, grabbing the item, trip back to conveyor and putting the item on it. Values of $p_i$ is calculated from speeds, accelerations and dimensions of the warehouse, but if production handling is taken into consideration, these values can become quite inaccurate since stacker crane may not always be at the same spot at the start of a job processing.
+\noindent \textbf{Machine processing time} ($p_i$) Time which machine associated with $job_i$ needs to process $job_i$. In other words, time needed to unload an item $i$ from it's location to conveyor. This action consists of trip from conveyor to the item $i$, grabbing the item, trip back to conveyor and putting the item on it. Values of $p_i$ is calculated from speeds, accelerations and dimensions of the warehouse, but if production handling is taken into consideration, these values can become quite inaccurate since stacker crane may not always be at the same spot at the start of a job processing. Processing time is never zero.
 
 
 \noindent \textbf{Scanning interval} ($s$) Processing time of a scanner. It is equal for every job.
@@ -134,51 +134,86 @@ There are 2 work stations connected in series. The first work stations consists 
 
 Main requirements of this problem is make a schedule that fits into working hours of the warehouse and make the schedule robust to random events, i.e. arrival of an item from production can postpone scheduled job at a machine for a whole duration of storing the item and that can lead to loading items in wrong order and filling buffer at a scanner. In thesis objective of this problem is described as minimization of sum of weighted sub objectives, which are: Lateness, sum of idle times and standard deviation if idle times. These objectives were selected mostly based on reading on objective functions and robustness in [pinedo]*. Experimenting with these objectives and their effect is shown in chapter 5*.
 
-Alternatively this problem can be formulated as follows:
+Assuming objective function is linear, we can formulate this problem with single expedition ramp as linear program as follows:
+\\
+
+\textbf{Decision variables}
+
+\begin{itemize}
+\item $x_{ij}$: 1 if $job_i$ expedited later than $job_j$ 0 otherwise
+\item$c_i$: completion time of $job_i$ on the second stage
+\item$idle_i$: idle time followed after $job_i$ on the second stage
+\item$y_i$: order number of $job_i$ on the second stage
+\item$scc_i$: start time of $job_i$ on the first stage 
+\end{itemize}
+\textbf{Data}
+\begin{itemize}
+\item$p_i$: processing time of $job_i$ on the first stage
+\item$E_i$: set of allowed order numbers on the second stage for $job_i$
+\item$I_i$: set of indexes of jobs scheduled on machine $i$ on the first stage
+\item$M$: represents a large number
+\end{itemize}
+
 \begin{equation}
 \begin{aligned}
-\text{minimize}\\
-& score^* = w_0L(c_0, c_1, \ldots, c_n) + w_1\sigma(idle_0, idle_1, \ldots, idle_n) + w_2\sum_{i=0}^{n}idle_i
+&\text{minimize}
+&&f(\ldots)
 \end{aligned}
 \end{equation}
 \begin{equation}
 \begin{aligned}
 \text{subject to}\\
-& scc_i - scc_j \geq p_i \lor scc_j - scc_i \geq p_j\\ && \text{for}\; i,j = 1, \ldots, n, i \neq j\\
-& r_i = r_j \implies sc_i - c_j \geq s + idle_i \lor c_j - c_i \geq s + idle_j\\ && \text{for}\; i,j = 1, \ldots, n, i \neq j\\
-& r_i = r_j \implies pos_i < pos_j \iff c_i < c_j\\ && \text{for}\; i,j = 1, \ldots, n, i \neq j\\
-& scc_i = c_i - s - idle_i - t_i\\ && \text{for}\; i = 1, \ldots, n
-
+& c_{i} - c_{j} + M(1 - x_{ij}) \geq s + idle_{i} && \text{for}\; i,j = 1, \ldots, n\\
+& c_{i} - scc_{i0} = p_{i} + t_i + s + idle_i && \text{for}\; i = 1, \ldots, n\\
+& scc_{i} + p_i < scc_j + M(1 - x_{ij}) && k = 0,\ldots,n, i,j \in I_k\\
+& y_{i} - y_{j} < c_i - c_j + M(1 - x_{ij}) && \text{for}\; i,j = 1, \ldots, n\\
+& y_i \in E_i && \text{for}\; i = 1, \ldots, n\\
+& x_{ij} \in \{0, 1\}  && \text{for}\; i,j = 1, \ldots, n\\ 
+& c_i \geq start && \text{for}\; i = 1, \ldots, n\\
+& c_i \leq end && \text{for}\; i = 1, \ldots, n\\
+& scc_{i} \geq start - p_i && \text{for}\; i = 1, \ldots, n\\
+& idle_i \geq 0 && \text{for}\; i = 1, \ldots, n\\
 \end{aligned}
 \end{equation}
 
-Or as linear program
-
-
 \chapter{Related work}
-\section{Complexity}
-\section{Overview of methods and approaches for finding optimal schedule}
-\section{Solving truck scheduling}
 
-Trucks have unknown processing times, but quantity of demanded items is known. Since 
+\section{Overview of methods and approaches for finding optimal schedule}
+Problems are hard. Methods like b\&b, csp, mit, etc. should be used
+\section{Value of finding optimal solution}
+Finding optimal solution is not really worth it in real world problems. Furthermore solving these problems with CSP or MIT requires too much processing time. Even in literature they are saying that around 50 jobs is the limit. 
 \section{Solving scheduling problems in practice}
+In practice solution is usually constructed using some simple heuristics. Complex heuristics is not really worth using because of random events. Questions usually is what should I try to improve and what heuristics should be good for that. 
 \subsection{Maybe example of FFLL algoritm?}
+FFLL algorithm which maximazies throughput and minimizes work in process and is used usually in some manufacturing facilities. This algorithm is using heuristics that cannot be used for our problem, but both this algorithm and first stage of proposed algorithm have three phases where jobs are allocated to machines, then order of jobs is decided and finally time are assigned. 
 \chapter{Proposed solution for our problem}
 \section{Constraint satisfaction problem formulation}
-\section{Value of finding optimal solution}
 \section{Algorithm description}
 Heuristic construction algorithm
 
 1. Truck allocation
 
-2. Item dispatching
+First of all, trucks are distributed to ramps to achiev good utilization.
+
+2. Order of jobs + dispatching
+
+Using hybrid cyclic heuristics we can distribute jobs quite equally among machines and also try to minimize makespan or other objectives
 
 3. Distribute available time as idle times
 
+Now that we know how long is schedule, we can tell how much time we have until work hours end. We can take this time a distribute it among items as idle times
+
 4. Item dispatching again with idle times
+
+We cannot just simply postpone jobs by idle time, we have run step 2. again, now with idle times.
+
 
 \section{Meta-heuristics}
 Local search (Tabu, simulated annealing)
+
+In scenario where we have more than one ramp, it's not easy to tell how much time I can distribute as idle time. Simulated annealing with ordered moves is good for distributing idle times among jobs. It can basically replace step 3 and 4 of proposed algorithm if it wasn't slower. It's better to use it after step 4 to distribute small timeslots to take advantage of remaining time of expedition.
+
+Another improvement is using tabu search which swaps order number of two items. Some objectives are not easily minimized using some heuristics in step 2 like for example weighted penalty for scheduling two jobs right after each other on a single machine because it can lead to stopping a production. 
 
 \chapter{Implementation}
 \section{Simulation environment}
