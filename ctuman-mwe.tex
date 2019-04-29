@@ -7,6 +7,8 @@
 	titlelanguage = english,
 	title-english = {Expedition scheduling in an automated warehouse},
 	title-czech = {Rozvrhování vyskladňování z automatizovaného skladu},
+	specification-file = {zav_prace.pdf},
+	front-specification = true,
 	department-english = {Department of Computer Science},
 	author = {Jan Kalina},
 	supervisor = {Ing. Martin Schaefer},
@@ -19,6 +21,7 @@
 }
 
 \ctuprocess
+
 \begin{thanks}
 
 TBD
@@ -53,12 +56,12 @@ test \ldots
 
 \chapter{Introduction}
 
-Scheduling is well studied and practical topic. It is widely used in manufacturing facilities, warehouses, which are discussed in this theses, and many other industries where good scheduling can play tremendous role in their success. Despite it's importance and years of research, scheduling is quite challenging problem, especially when it comes to real world problems where finding an optimal schedule is usually nearly impossible due to it's high computational complexity. 
+Scheduling is a well studied and practical topic. It is widely used in manufacturing facilities, warehouses, which are discussed in this thesis, and many other industries where proper scheduling can play a great role in their success. Despite its importance and years of research, scheduling is quite a challenging problem, especially when it comes to real-world problems where finding an optimal schedule is usually nearly impossible due to its high computational complexity. 
 
-Since the beginning of research in scheduling, many methods and approaches were developed for finding schedules close to optimal schedule in reasonable time, but what is a good or optimal schedule? Determining objective of a schedule is problem on it own. Usual objective of a scheduling is to minimize duration or makespan of a schedule, but this objective alone is not sufficient because of stochastic nature of real world problems and custom requirements some facility may demand. Many facilities demand different and complex objectives. For example in case of our an automated warehouse, it may crucial to not only finish expedition in required time, but to also expedite items in required order. 
+Since the beginning of research in scheduling, many methods and approaches were developed for finding schedules close to optimal schedule in a reasonable time, but what is a good or optimal schedule? Determining the objective of a schedule is a problem on its own. The usual objective of scheduling is to minimize the duration or makespan* of a schedule, but this objective alone is not sufficient because of the stochastic nature of real-world problems and customized requirements some facility may demand. Many facilities demand different and complex objectives. For example, in case of our an automated warehouse, it may be crucial to not only finish expedition in required time but to also expedite items in required order. 
 
-In this thesis, general methods for solving scheduling problems relevant to scheduling an expedition of the given automated warehouse configuration are discussed. Then, method and an objective of a schedule for the given automated warehouse and scenario is proposed and finally proposed method is implemented and evaluated based on results from provided simulation tool. Basic structure and configuration of an automated warehouse were provided to me and are based on the real world problem.
-
+In this thesis, general methods for solving scheduling problems relevant to scheduling an expedition of the given automated warehouse configuration are discussed. Then, method and an objective of a schedule for the given automated warehouse and scenario is proposed and finally proposed method is implemented and evaluated based on results from the provided simulation tool. Basic structure and configuration of an automated warehouse were provided and are described in the upcoming section.
+\section{The automated warehouse}
 \section{Motivation}
 
 Goal of this thesis is to be able to create appropriate schedule in reasonable time for the given automated warehouse and integrate this schedule to provided simulation tool so that the created schedule can be observed in action and evaluated based on it. With a combination of the schedule and the simulation tool, we are also able to get data about capabilities of the warehouse itself, which is valuable information when designing an automated warehouse. Integration of the scheduler to the simulation tool also enriches the simulation tool and can be used in future projects.
@@ -140,7 +143,7 @@ Assuming objective function is linear, we can formulate this problem with single
 \textbf{Decision variables}
 
 \begin{itemize}
-\item $x_{ij}$: 1 if $job_i$ expedited later than $job_j$ 0 otherwise
+\item $x_{ij}$: 1 if $job_i$ expedited immediately after $job_j$, 0 otherwise
 \item$c_i$: completion time of $job_i$ on the second stage
 \item$idle_i$: idle time followed after $job_i$ on the second stage
 \item$y_i$: order number of $job_i$ on the second stage
@@ -152,6 +155,8 @@ Assuming objective function is linear, we can formulate this problem with single
 \item$E_i$: set of allowed order numbers on the second stage for $job_i$
 \item$I_i$: set of indexes of jobs scheduled on machine $i$ on the first stage
 \item$M$: represents a large number
+\item$start$: time at which work hours start
+\item$end$: time at which work hours end
 \end{itemize}
 
 \begin{equation}
@@ -163,6 +168,7 @@ Assuming objective function is linear, we can formulate this problem with single
 \begin{equation}
 \begin{aligned}
 \text{subject to}\\
+& \sum_{i=0}^{n} x_{ij} = 1 && \text{for}\; i = 1, \ldots, n\\
 & c_{i} - c_{j} + M(1 - x_{ij}) \geq s + idle_{i} && \text{for}\; i,j = 1, \ldots, n\\
 & c_{i} - scc_{i0} = p_{i} + t_i + s + idle_i && \text{for}\; i = 1, \ldots, n\\
 & scc_{i} + p_i < scc_j + M(1 - x_{ij}) && k = 0,\ldots,n, i,j \in I_k\\
@@ -179,13 +185,13 @@ Assuming objective function is linear, we can formulate this problem with single
 \chapter{Related work}
 
 \section{Overview of methods and approaches for finding optimal schedule}
-Problems are hard. Methods like b\&b, csp, mit, etc. should be used
+Problems are hard. Methods like b\&b, csp, mit, etc. should be used.
 \section{Value of finding optimal solution}
 Finding optimal solution is not really worth it in real world problems. Furthermore solving these problems with CSP or MIT requires too much processing time. Even in literature they are saying that around 50 jobs is the limit. 
 \section{Solving scheduling problems in practice}
 In practice solution is usually constructed using some simple heuristics. Complex heuristics is not really worth using because of random events. Questions usually is what should I try to improve and what heuristics should be good for that. 
-\subsection{Maybe example of FFLL algoritm?}
-FFLL algorithm which maximazies throughput and minimizes work in process and is used usually in some manufacturing facilities. This algorithm is using heuristics that cannot be used for our problem, but both this algorithm and first stage of proposed algorithm have three phases where jobs are allocated to machines, then order of jobs is decided and finally time are assigned. 
+
+FFLL 
 \chapter{Proposed solution for our problem}
 \section{Constraint satisfaction problem formulation}
 \section{Algorithm description}
@@ -193,7 +199,7 @@ Heuristic construction algorithm
 
 1. Truck allocation
 
-First of all, trucks are distributed to ramps to achiev good utilization.
+First of all, trucks are distributed to ramps to achieve good utilization. There are some heuristics for this, but this task can be solved using MIP.
 
 2. Order of jobs + dispatching
 
@@ -201,19 +207,14 @@ Using hybrid cyclic heuristics we can distribute jobs quite equally among machin
 
 3. Distribute available time as idle times
 
-Now that we know how long is schedule, we can tell how much time we have until work hours end. We can take this time a distribute it among items as idle times
-
-4. Item dispatching again with idle times
-
-We cannot just simply postpone jobs by idle time, we have run step 2. again, now with idle times.
-
+Now that we know how long is schedule, we can tell how much time we have until work hours end. We can take this time a distribute it among items as idle times. We cannot just simply postpone jobs by idle time, we have run step 2. again, now with idle times.
 
 \section{Meta-heuristics}
 Local search (Tabu, simulated annealing)
 
-In scenario where we have more than one ramp, it's not easy to tell how much time I can distribute as idle time. Simulated annealing with ordered moves is good for distributing idle times among jobs. It can basically replace step 3 and 4 of proposed algorithm if it wasn't slower. It's better to use it after step 4 to distribute small timeslots to take advantage of remaining time of expedition.
+In scenario where we have more than one ramp, it's not easy to tell how much time I can distribute as idle time. Simulated annealing with ordered moves is good for distributing idle times among jobs. It can basically replace step 3 of proposed algorithm if it wasn't slower. It's better to use it after step 4 to distribute small timeslots to take advantage of remaining time of expedition.
 
-Another improvement is using tabu search which swaps order number of two items. Some objectives are not easily minimized using some heuristics in step 2 like for example weighted penalty for scheduling two jobs right after each other on a single machine because it can lead to stopping a production. 
+Another improvement is using tabu search which swaps order number of two items. Some objectives are not easily minimized using some heuristics in step 2 like for example weighted penalty for scheduling two jobs right after each other on a single machine because it can lead to stopping a productio
 
 \chapter{Implementation}
 \section{Simulation environment}
@@ -223,9 +224,9 @@ Another improvement is using tabu search which swaps order number of two items. 
 \section{Scenarios}
 \section{Comparison}
 \subsection{Comparison of plan and behavior in simulation}
+Comparing different version (LS, no LS, heuristic 1, heuristic 2, ...) of algorithm too.
 \subsection{Effect of objectives?}
 Mainly significance of idle times (at scanner or machines)
-\subsection{Comparison to greedy algorithm}
 \chapter{Conclusion}
 
 Lorep ipsum \cite{doe}
