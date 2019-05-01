@@ -106,9 +106,10 @@ We also simplify our problem and assume that workers at loading ramp can always 
 
 \subsection{Expedition scenario}
 
-We consider expedition is spanned over part of a one day. During expedition, a truck can arrive at an expedition ramp at scheduled time and demand certain number of items of different types and order of these types in which they should be loaded into the truck for practical reasons. Items are loaded into a truck in order in which they are processed by a scanner.
+We consider expedition is spanned over part of a one day. During expedition, a truck can arrive at an expedition ramp at scheduled time and demand certain number of items of different types and order of these types in which they should be loaded into the truck for practical reasons. Items are loaded into a truck in order in which they are processed by a scanner. At each ramp, trucks arrive and leave one after each other.After expedition of a truck is finished, there is reserved time after which the next truck can arrive to correspond more to reality. 
 
 Which specific items will be expedited is known in advance and is expected that these items are distributed uniformly across all aisles.
+
 
 \subsection{Available information}
 Several basic parameters provided for the given automated warehouse. These parameters include horizontal and vertical speeds and accelerations of stacker cranes, dimensions of a warehouse, speed and length of conveyors, duration of scanning an item, duration of grabbing an item from a conveyor, duration of putting an item on a conveyor and exact location of each item stored in the warehouse. For expedition, we know count, types and order at which items should be loaded for each truck. 
@@ -132,11 +133,19 @@ From these parameters we are able to calculate data needed for describing machin
 
 \noindent \textbf{Start time} ($s_i$)
 
+\noindent \textbf{Reserve}
+
 \noindent \textbf{Stacker crane completion time} ($scc_i$)
 
 \noindent \textbf{Stacker crane start time} ($scs_i$)
 
 \noindent \textbf{Position in expedition} ($pos_i$)
+
+\noindent \textbf{Makespan}
+
+\noindent \textbf{Average flow time}
+
+\noindent \textbf{Total flow time}
 
 \noindent \textbf{TBD - expedition list, ... Add when needed} ($something_i$)
 
@@ -147,7 +156,15 @@ From these parameters we are able to calculate data needed for describing machin
  
  \subsection{Scheduling trucks}
  
- There are $m$ ramps in parallel and $n$ trucks planned for a day. Ramps can be interpreted as machines in parallel and jobs as whole expedition of each truck. Since each ramp includes only one scanner, which acts are bottleneck in the warehouse, objective of this problem should be to distribute trucks so that makespan is minimized, which often leads to good utilization of machines \cite{pinedo}. 
+ We will formulate this problem as parallel machine model.
+ 
+ There are $m$ ramps in parallel and $n$ trucks planned for a day. Ramps can be interpreted as machines in parallel and jobs as whole expedition of each truck. Since each ramp includes only one scanner, which acts are bottleneck in the warehouse, objective of this problem should be to uniformly distribute expedition among ramps. By minimizing makespan, we achieve balanced load among expedition ramps which often leads to good utilization of machines \cite{pinedo}. 
+ 
+ Since duration of truck expedition is unknown, we approximate it's duration as:
+ 
+ \begin{equation}
+     duration = quantity \cdot \overline{p} + reseve
+ \end{equation}
  
  This problem of distributing trucks among ramps can be formulated as LP as follows:
  
@@ -245,8 +262,16 @@ In this thesis, objective of this problem is described as minimization of sum of
 
 \chapter{Related work}
 
+Methods for solving various forms of scheduling problems were extensively studied for decades now. Many of these methods are summarized in \cite{pinedo} and \cite{bucker}. We will mainly discuss flexible flow line and parallel machine problem, which are relevant for this thesis. 
+
 \section{Overview of methods and approaches for finding optimal schedule}
-Problems are hard. Methods like b\&b, csp, mit, etc. should be used.
+\subsection{Parallel machine model}
+
+Minimizing makespan in parallel machine model. 
+\subsection{Flexible flow line model}
+
+For small instances or simple cases of scheduling problem there often exists dispatching rules from which we are able to construct optimal schedule for objectives like makespan or total flow time. For many practical problems or uncommon objectives, it is hard to recognize 
+
 \section{Value of finding optimal solution}
 Finding optimal solution is not really worth it in real world problems. Furthermore solving these problems with CSP or MIT requires too much processing time. Even in literature they are saying that around 50 jobs is the limit. 
 \section{Solving scheduling problems in practice}
