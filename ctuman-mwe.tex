@@ -115,7 +115,7 @@ Several basic parameters provided for the given automated warehouse. These param
 
 From these parameters we are able to calculate data needed for describing machine scheduling model.
 
-\section{Notation}*
+\section{Notation and terminology}*
 
 \noindent \textbf{Job} ($job_i$) A $job_i$ represents an item $i$ to be expedited. Since expedition items are known in advance $job_i$ is already associated with one of the stacker cranes. 
 
@@ -147,9 +147,32 @@ From these parameters we are able to calculate data needed for describing machin
  
  \subsection{Scheduling trucks}
  
- This problem can be described as parallel machine model.
+ There are $m$ ramps in parallel and $n$ trucks planned for a day. Ramps can be interpreted as machines in parallel and jobs as whole expedition of each truck. Since each ramp includes only one scanner, which acts are bottleneck in the warehouse, objective of this problem should be to distribute trucks so that makespan is minimized, which often leads to good utilization of machines \cite{pinedo}. 
  
- There are $m$ ramps in parallel and $n$ trucks planned for a day. Ramps can be interpreted as machines in parallel and jobs as whole expedition of each truck. Since each ramp includes only one scanner, which acts are bottleneck in the warehouse, objective of this problem should be to minimize makespan which often leads to good utilization of machines [pinedo]*.
+ This problem of distributing trucks among ramps can be formulated as LP as follows:
+ 
+\begin{itemize}
+\item $x_{ij}$: 1 if truck $i$ is assigned to ramp $j$, 0 otherwise
+\item$c_i$: completion time of expedition on a ramp $i$
+\end{itemize}
+\textbf{Data}
+\begin{itemize}
+\item$d_i$: approximation of expedition duration of a truck $i$*
+\end{itemize}
+
+\begin{equation}
+\begin{aligned}
+&\text{minimize}
+&&\max(c_0, c_1, \ldots, c_n)
+\end{aligned}
+\end{equation}
+\begin{equation}
+\begin{aligned}
+\text{subject to}\\
+& \sum_{i=0}^{n} x_{ij} = 1 &&\\
+& d_0x_{i0} + d_1x_{0j} + \ldots + d_nx_{nj} = c_j && \text{for}\; j = 1, \ldots, m\\
+\end{aligned}
+\end{equation}
  
 \subsection{Expedition in the automated warehouse as machine scheduling model}
 
@@ -186,7 +209,7 @@ Alternatively, we can formulate this problem (with single expedition ramp) as li
 \begin{equation}
 \begin{aligned}
 \text{subject to}\\
-& \sum_{i=0}^{n} x_{ij} = 1 && \text{for}\; i = 1, \ldots, n\\
+& \sum_{i=0}^{n} x_{ij} = 1 &&\\
 & c_{i} - c_{j} + M(1 - x_{ij}) \geq s + idle_{i} && \text{for}\; i,j = 1, \ldots, n\\
 & c_{i} - scc_{i0} = p_{i} + t_i + s + idle_i && \text{for}\; i = 1, \ldots, n\\
 & scc_{i} + p_i < scc_j + M(1 - x_{ij}) && k = 0,\ldots,n, i,j \in I_k\\
@@ -210,13 +233,13 @@ In this thesis, objective of this problem is described as minimization of sum of
 \begin{equation}
     \sum_{i=0}^{n} w_iidle_i
 \end{equation}
-\item \textbf{Flow time of trucks} $(U)$
+\item \textbf{Average flow time of trucks} $(U)$
 \begin{equation} 
     \dfrac{\sum_{k=0}^{m} \sum_{i \in I_k} c_i}{m}
 \end{equation}
 \end{enumerate}
 
- These objectives were selected mostly based on reading on objective functions and robustness in [pinedo]* and [tkindt] and experimenting in simulation tool. 
+ These objectives were selected mostly based on reading on objective functions and robustness in \cite{pinedo} and \cite{tkindt}* and experimenting in simulation tool. 
  
  Experimenting with these objectives and their effect is shown in chapter \ref{ch:Evaluation}.
 
@@ -238,7 +261,9 @@ Heuristic construction algorithm
 
 1. Truck allocation
 
-First of all, trucks are distributed to ramps to achieve good utilization. There are some heuristics for this, but this task can be solved using MIP.
+First of all, trucks are distributed to ramps to achieve good utilization. There are some heuristics for this, but this task can be solved using MIP. For cases where MIP is too slow, LPT heuristics can solve it with error 4/3 - 1/3m 
+\cite{gram1969}
+
 
 2. Order of jobs + dispatching
 
@@ -275,6 +300,8 @@ Lorep ipsum \cite{doe}
 \bibitem{warehousepic} GILGEN LOGISTICS AG. \emph{Automated high-bay warehouse} [online]. 4 December 2016. Available from: https://commons.wikimedia.org/wiki/File:Automatisches\_Hochregallager\_mit\_Regalbediengeräten.jpg
 \bibitem{doe} J. Doe. \emph{Book on foobar.} Publisher X,
  2300.
+ \bibitem{gram1969} R.L. Graham (1969) \emph{Bounds on Multiprocessing Timing Anomalies}, SIAM
+Journal of Applied Mathematics, Vol. 17, pp. 263–269
 
 \end{thebibliography}
 
