@@ -159,7 +159,7 @@ From these parameters, we can calculate data needed for describing machine sched
  
  There are $m$ ramps in parallel and $n$ trucks planned for a day. Ramps can be interpreted as machines in parallel and jobs as the whole expedition of each truck. Since each ramp includes only one scanner, which acts are a bottleneck in the warehouse, the objective of this problem should be to distribute expedition among ramps uniformly. By minimizing the makespan, we achieve a balanced load among expedition ramps which often leads to good utilization of machines \cite{pinedo}. 
  
- Since the duration of the truck expedition is unknown, we approximate its duration as:
+ Since the duration of the truck expedition is unknown, we approximate its duration using average processing times $\overline{p}$ as follows:
  
  \begin{equation}
      duration = quantity \cdot \overline{p} + reserve
@@ -173,7 +173,7 @@ From these parameters, we can calculate data needed for describing machine sched
 \end{itemize}
 \textbf{Data}
 \begin{itemize}
-\item$d_i$: approximation of expedition duration of a truck $i$*
+\item$d_i$: approximation of expedition duration of a truck $i$
 \end{itemize}
 
 \begin{equation}
@@ -267,9 +267,26 @@ why*
 Methods for solving various forms of scheduling problems were extensively studied for decades now. Many of these methods are summarized in \cite{pinedo} and \cite{bucker}. We will mainly discuss the flexible flow line and parallel machine problem, which are relevant for this thesis. 
 
 \section{Overview of methods and approaches for finding optimal schedule}
+
+Both problems we consider in this thesis are NP-hard \cite{complexity}. For finding optimal schedule, seemingly two general methods are used, Mixed-Integer Programming (MIP) and Constraint Programming (CP) with combination of Branch-and-Bound methods, approximation of initial bounds, etc.. MIP approach is usually obsolete for real-world problems, where there are hundreds or thousands jobs to schedule. CP is in many cases similar to MIT, but offers better flexibility for designing constraints and 
+
 \subsection{Parallel machine model}
 
-Minimizing makespan in parallel machine model. 
+Minimizing makespan in parallel machine model in NP-hard problem \cite{complexity}. Seemingly there are two methods that are often used to solved this problem, Mixed-Integer Programming and Constraint Programming 
+
+
+
+
+There are few construction heuristics from which we can construct a schedule that guarantees an upper bound of the makespan. One of these heuristics is The Longest Processing Time first (LPT) heuristics that guarantees that:
+
+\begin{equation}
+\dfrac{C_{max}(LPT)}{C_{max}(OPTIMAL)} \leq \dfrac{4}{3} - \dfrac{1}{3m}
+\end{equation}
+
+Where $m$ is number of parallel machines.
+
+There are heuristics with slightly tighter bounds and are useful for problems with many jobs, many machines or both. 
+
 \subsection{Flexible flow line model}
 
 For small instances or simple cases of scheduling problem there often exists dispatching rules from which we are able to construct optimal schedule for objectives like makespan or total flow time. For many practical problems or uncommon objectives, it is hard to recognize 
@@ -329,6 +346,9 @@ Lorep ipsum \cite{doe}
  2300.
  \bibitem{gram1969} R.L. Graham (1969) \emph{Bounds on Multiprocessing Timing Anomalies}, SIAM
 Journal of Applied Mathematics, Vol. 17, pp. 263–269
+\bibitem{complexity} A.H.G. Rinnooy Kan (1976) \emph{Machine Scheduling Problems: Classification,
+Complexity and Computations}, Nijhoff, The Hague (as cited in \cite{pinedo})
+
 
 \end{thebibliography}
 
