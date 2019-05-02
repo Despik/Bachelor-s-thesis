@@ -58,19 +58,19 @@ test \ldots
 
 Scheduling is a well studied and practical topic. It is widely used in manufacturing facilities, warehouses, which are discussed in this thesis, and many other industries where proper scheduling can play a great role in their success. Despite its importance and years of research, scheduling is quite a challenging problem, especially when it comes to real-world problems where finding an optimal schedule is usually nearly impossible due to its high computational complexity. 
 
-Since the beginning of research in scheduling, many methods and approaches were developed for finding schedules close to optimal schedule in a reasonable time, but what is a good or optimal schedule? Determining the objective of a schedule is a problem on its own. The usual objective of scheduling is to minimize the makespan, which is the length of a schedule, but this objective alone is not sufficient because of the stochastic nature of real-world problems and customized requirements some facility may demand. Many facilities demand different and complex objectives. For example, in case of an automated warehouse, it may be crucial to not only finish expedition in required time but to also expedite items in required order. 
+Since the beginning of research in scheduling, many methods and approaches were developed for finding schedules close to optimal schedule in a reasonable time, but what is a good or optimal schedule? Determining the objective of a schedule is a problem on its own. The usual objective of scheduling is to minimize the makespan, which is the length of a schedule, but this objective alone is not sufficient because of the stochastic nature of real-world problems and customized requirements some facility may demand. Many facilities demand different and complex objectives. For example, in case of an automated warehouse, it may be crucial to not only finish expedition in required time but to also expedite items in the required order. 
 
 In this thesis, general methods for solving scheduling problems relevant to scheduling a daily expedition of the given automated warehouse configuration are discussed. Then, method and an objective of a schedule for the given automated warehouse and scenario is proposed and finally proposed method is implemented and evaluated based on results from the provided simulation tool. Basic structure and functionality of an automated warehouse were provided and are described in the upcoming section.
 
 \section{The automated warehouse}
 
-There are many different types of automated warehouses with very different requirements, structures and functionality. Problem of scheduling an expedition can be very different based on the structure and the type of an automated warehouse. In this thesis we consider one of the structures of automated warehouses that is fairly common and is based on real-world problem. 
+There are many different types of automated warehouses with very different requirements, structures, and functionality. The problem of scheduling an expedition can be very different based on the structure and the type of an automated warehouse. In this thesis, we consider one of the structures of automated warehouses that is fairly common and is based on a real-world problem. 
 
 \subsection{Description}
 \label{subsec:Description}
-The automated warehouse is part of a factory that produces some items. These items are stored in its warehouse and can be expedited. The automated warehouse has given number of aisles. Each aisle has racks on each side, where items are stored and on each aisle operates a single stacker crane. On one side of each aisle are connected two conveyors. The first conveyor is moving items from an aisle to one of the expedition ramps, where trucks can be loaded, and the second is bringing in items from production. Before each item reaches an expedition ramp, it needs to be processed by a scanner, which is located at the end of the first conveyor.
+The automated warehouse is part of a factory that produces some items. These items are stored in their warehouse and can be expedited. The automated warehouse has given number of aisles. Each aisle has racks on each side, where items are stored and on each aisle operates a single stacker crane. On one side of each aisle are connected, two conveyors. The first conveyor is moving items from an aisle to one of the expedition ramps, where trucks can be loaded, and the second is bringing in items from production. Before each item reaches an expedition ramp, it needs to be processed by a scanner, which is located at the end of the first conveyor.
 
-When a truck arrives at expedition ramp, stacker cranes should start unloading items on conveyor leading to the expedition ramp. Stacker cranes can move vertically and horizontally in an aisle and are able to hold a single item each. Stacker crane which has the requested item in its aisle moves to the item, grabs it and put it on the conveyor. In case of item arriving from production to an aisle. Stacker crane on that aisle should take this item and store in in a free position in the aisle. Stacker cranes operate automatically and either stores an item from production if is available or execute scheduled unloadings. If an item arrives from production, stacker cranes prioritize storing an item. It means that as soon as a stacker crane finishes action in progress it stores an item from a production even if it means delaying scheduled unloadings.
+When a truck arrives at expedition ramp, stacker cranes should start unloading items on conveyor leading to the expedition ramp. Stacker cranes can move vertically and horizontally in an aisle and can hold a single item each. Stacker crane which has the requested item in its aisle moves to the item grabs it and put it on the conveyor. In case of an item arriving from production to an aisle. Stacker crane on that aisle should take this item and store in a free position in the aisle. Stacker cranes operate automatically and either stores an item from production if it is available or execute scheduled unloadings. If an item arrives from production, stacker cranes prioritize storing an item. It means that as soon as a stacker crane finishes action in progress, it stores an item from production even if it means delaying scheduled unloadings.
 
 Additional details are stated in \ref{sec:Automated warehouse}.
 
@@ -82,9 +82,9 @@ Additional details are stated in \ref{sec:Automated warehouse}.
 
 \section{Motivation}
 
-Goal of this thesis is to be able to create appropriate schedule in reasonable time for the given automated warehouse and integrate this schedule to provided simulation tool so that the created schedule can be observed in action and evaluated based on it. With a combination of the schedule and the simulation tool, we are also able to get data about capabilities of the warehouse itself, which is valuable information when designing an automated warehouse. Integration of the scheduler to the simulation tool also enriches the simulation tool and can be used in future projects.
+The goal of this thesis is to be able to create an appropriate schedule in a reasonable time for the given automated warehouse and integrate this schedule to provided simulation tool so that the created schedule can be observed in action and evaluated based on it. With a combination of the schedule and the simulation tool, we are also able to get data about the capabilities of the warehouse itself, which is valuable information when designing an automated warehouse. Integration of the scheduler to the simulation tool also enriches the simulation tool and can be used in future projects.
 
-Properties to consider are prioritization of production handling, limited throughput and robustness to failure of individual robots. 
+Properties to consider are prioritization of production handling, limited throughput, and robustness to failure of individual robots. 
 
 \section{Structure of this thesis}
 
@@ -94,27 +94,26 @@ Properties to consider are prioritization of production handling, limited throug
 \section{Automated warehouse}
 \label{sec:Automated warehouse}
 
-
-This section describes additional details regarding to the warehouse and expedition on top of the description in \ref{subsec:Description} to be able to properly state scheduling problem.
+This section describes additional details regarding the warehouse and expedition on top of the description in \ref{subsec:Description} to be able to state scheduling problem properly.
 
 \subsection{Details of the automated warehouse}
 
 
-Scanners, which are located at the end of every expedition conveyor, accepts an item periodically. Since scanner is processing items in given interval, there has to be space between items on conveyor based on the speed of the conveyor and the duration of the interval. If many items arrive too soon after each other, they pile up and may cause conveyor to stop, which should never happen. To prevent stopping of and conveyor, there is a small buffer. Number of items that pile up in the buffer during a daily expedition will be one of the measurements of robustness to delays.
+Scanners, which are located at the end of every expedition conveyor, accepts an item periodically. Since the scanner is processing items in the given interval, there has to be space between items on conveyor based on the speed of the conveyor and the duration of the interval. If many items arrive too soon after each other, they pile up and may cause the conveyor to stop, which should never happen. To prevent stopping of and conveyor, there is a small buffer. The number of items that pile up in the buffer during a daily expedition will be one of the measurements of robustness to delays.
 
-We also simplify our problem and assume that workers at loading ramp can always pick up an item coming from scanner. This mean that scanners then create bottlenecks for each expedition ramp where throughput is limited by frequency at which scanner can process items.
+We also simplify our problem and assume that workers at the loading ramp can always pick up an item coming from the scanner. That means that scanners then create bottlenecks for each expedition ramp where throughput is limited by the frequency at which scanner can process items.
 
 \subsection{Expedition scenario}
 
-We consider expedition is spanned over part of a one day. During expedition, a truck can arrive at an expedition ramp at scheduled time and demand certain number of items of different types and order of these types in which they should be loaded into the truck for practical reasons. Items are loaded into a truck in order in which they are processed by a scanner. At each ramp, trucks arrive and leave one after each other.After expedition of a truck is finished, there is reserved time after which the next truck can arrive to correspond more to reality. 
+We consider expedition is spanned over part of one day. During the expedition, a truck can arrive at an expedition ramp at a scheduled time and demand a certain number of items of different types and order of these types in which they should be loaded into the truck for practical reasons. Items are loaded into a truck in order in which they are processed by a scanner. At each ramp, trucks arrive and leave one after each other. After the expedition of a truck is finished, there is reserved time after which the next truck can arrive to correspond more to reality. 
 
 Which specific items will be expedited is known in advance and is expected that these items are distributed uniformly across all aisles.
 
-
 \subsection{Available information}
-Several basic parameters provided for the given automated warehouse. These parameters include horizontal and vertical speeds and accelerations of stacker cranes, dimensions of a warehouse, speed and length of conveyors, duration of scanning an item, duration of grabbing an item from a conveyor, duration of putting an item on a conveyor and exact location of each item stored in the warehouse. For expedition, we know count, types and order at which items should be loaded for each truck. 
 
-From these parameters we are able to calculate data needed for describing machine scheduling model.
+Several basic parameters provided for the given automated warehouse. These parameters include horizontal and vertical speeds and accelerations of stacker cranes, dimensions of a warehouse, speed and length of conveyors, duration of scanning an item, duration of grabbing an item from a conveyor, duration of putting an item on a conveyor and exact location of each item stored in the warehouse. For the expedition, we know count, types, and order at which items should be loaded for each truck. 
+
+From these parameters, we can calculate data needed for describing machine scheduling model.
 
 \section{Notation and terminology}*
 
@@ -152,21 +151,21 @@ From these parameters we are able to calculate data needed for describing machin
 
 \section{Scheduling problem}
  
- Problem of expedition scheduling in the automated warehouse can be separated into two problems. The first problem is dealing assignment of a ramps to trucks and order of trucks at which they arrive. The second problem occurs after the first problem and it deals with assignment of completion times to jobs only, since machines are predetermined. This thesis mostly tackles the second problem since a good solution to the first problem is fairly easy to get as is shown in chapter \ref{ch:Proposed solution} and scheduling of the second problem has greater effect on overall quality of the schedule. *Quality of solution to the 1st problem depends on quality of solution of 2nd problem, address it* 
+ The problem of expedition scheduling in the automated warehouse can be separated into two problems. The first problem is dealing assignment of ramps to trucks and order of trucks at which they arrive. The second problem occurs after the first problem, and it deals with the assignment of completion times to jobs only since machines are predetermined. This thesis mostly tackles the second problem since a good solution to the first problem is fairly easy to get as is shown in chapter \ref{ch:Proposed solution} and scheduling of the second problem has a greater effect on the overall quality of the schedule. *Quality of solution to the 1st problem depends on quality of solution of 2nd problem, address it* 
  
  \subsection{Scheduling trucks}
  
  We will formulate this problem as parallel machine model.
  
- There are $m$ ramps in parallel and $n$ trucks planned for a day. Ramps can be interpreted as machines in parallel and jobs as whole expedition of each truck. Since each ramp includes only one scanner, which acts are bottleneck in the warehouse, objective of this problem should be to uniformly distribute expedition among ramps. By minimizing makespan, we achieve balanced load among expedition ramps which often leads to good utilization of machines \cite{pinedo}. 
+ There are $m$ ramps in parallel and $n$ trucks planned for a day. Ramps can be interpreted as machines in parallel and jobs as the whole expedition of each truck. Since each ramp includes only one scanner, which acts are a bottleneck in the warehouse, the objective of this problem should be to distribute expedition among ramps uniformly. By minimizing the makespan, we achieve a balanced load among expedition ramps which often leads to good utilization of machines \cite{pinedo}. 
  
- Since duration of truck expedition is unknown, we approximate it's duration as:
+ Since the duration of the truck expedition is unknown, we approximate its duration as:
  
  \begin{equation}
-     duration = quantity \cdot \overline{p} + reseve
+     duration = quantity \cdot \overline{p} + reserve
  \end{equation}
  
- This problem of distributing trucks among ramps can be formulated as LP as follows:
+ This problem of distributing trucks among ramps can be formulated as a linear program as follows:
  
 \begin{itemize}
 \item $x_{ij}$: 1 if truck $i$ is assigned to ramp $j$, 0 otherwise
@@ -193,11 +192,11 @@ From these parameters we are able to calculate data needed for describing machin
  
 \subsection{Expedition in the automated warehouse as machine scheduling model}
 
-Problem of assigning completion times to jobs in the automated warehouse can be formulated as special case of 2-stage flexible flow shop (FF2) with blocking or flexible flow line (FFL) with two stages as follows:
+The problem of assigning completion times to jobs in the automated warehouse can be formulated as a special case of 2-stage flexible flow shop (FF2) with blocking or flexible flow line (FFL) with two stages as follows:
 
-There are 2 work stations connected in series. The first work stations consists of $m$ machines (stacker cranes) in parallel and the second work station consists of $l$ machines (scanners) also in parallel. Every job $job_i$ needs to be processed on it's predetermined machine. After job $job_i$ is processed, it travels to a scanner where it needs to be processed too. Jobs cannot wait between work stations and machines need to start processing a job as soon as it arrives. This alone is referred to as FFL.
+There are two work stations connected in series. The first work stations consist of $m$ machines (stacker cranes) in parallel and the second work station consists of $l$ machines (scanners) also in parallel. Every job $job_i$ needs to be processed on its predetermined machine. After job $job_i$ is processed, it travels to a scanner where it needs to be processed too. Jobs cannot wait between work stations, and machines need to start processing a job as soon as it arrives. That alone is referred to as FFL.
 
-Alternatively, we can formulate this problem (with single expedition ramp) as linear program, as follows:\\
+Alternatively, we can formulate this problem (with single expedition ramp) as a linear program, as follows:\\
 \textbf{Decision variables}
 
 \begin{itemize}
@@ -241,28 +240,31 @@ Alternatively, we can formulate this problem (with single expedition ramp) as li
 \end{equation}
 \\
 
-Main requirements of this problem is make a schedule that fits into working hours of the warehouse and make the schedule robust to random events, i.e. arrival of an item from production can postpone scheduled job at a machine for a whole duration of storing the item and that can lead to loading items in wrong order and filling buffer at a scanner. 
+Main requirements of this problem are to make a schedule that fits into working hours of the warehouse and make the schedule robust to random events. For example, the arrival of an item from production can postpone scheduled job at a machine for a whole duration of storing the item, and that can lead to loading items in the wrong order and filling buffer at a scanner. 
 
 In this thesis, objective of this problem is described as minimization of sum of weighted sub-objectives. These are the objectives that were selected:
 \begin{enumerate}
 \item \textbf{Tardiness} $(T)$\\ \begin{equation}\max(\max_{i=0,\ldots,n}( c_i - end), 0)\end{equation}
+why*
 \item \textbf{Weighted sum of idle times} $(R)$\\ 
 \begin{equation}
     \sum_{i=0}^{n} w_iidle_i
 \end{equation}
+why*
 \item \textbf{Average flow time of trucks} $(U)$
 \begin{equation} 
     \dfrac{\sum_{k=0}^{m} \sum_{i \in I_k} c_i}{m}
 \end{equation}
+why*
 \end{enumerate}
 
- These objectives were selected mostly based on reading on objective functions and robustness in \cite{pinedo} and \cite{tkindt}* and experimenting in simulation tool. 
+ These objectives were selected mostly based on reading on objective functions and robustness in \cite{pinedo} and \cite{tkindt}* and experimenting in the simulation tool. 
  
  Experimenting with these objectives and their effect is shown in chapter \ref{ch:Evaluation}.
 
 \chapter{Related work}
 
-Methods for solving various forms of scheduling problems were extensively studied for decades now. Many of these methods are summarized in \cite{pinedo} and \cite{bucker}. We will mainly discuss flexible flow line and parallel machine problem, which are relevant for this thesis. 
+Methods for solving various forms of scheduling problems were extensively studied for decades now. Many of these methods are summarized in \cite{pinedo} and \cite{bucker}. We will mainly discuss the flexible flow line and parallel machine problem, which are relevant for this thesis. 
 
 \section{Overview of methods and approaches for finding optimal schedule}
 \subsection{Parallel machine model}
