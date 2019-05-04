@@ -130,6 +130,8 @@ From these parameters, we can calculate data needed for describing machine sched
 
 \noindent \textbf{Completion time} ($c_i$)
 
+\noindent \textbf{Completion time of a truck} ($ct_i$)
+
 \noindent \textbf{Start time} ($s_i$)
 
 \noindent \textbf{Reserve}
@@ -157,38 +159,7 @@ From these parameters, we can calculate data needed for describing machine sched
  
  We will formulate this problem as parallel machine model.
  
- There are $m$ ramps in parallel and $n$ trucks planned for a day. Ramps can be interpreted as machines in parallel and jobs as the whole expedition of each truck. Since each ramp includes only one scanner, which acts are a bottleneck in the warehouse, the objective of this problem should be to distribute expedition among ramps uniformly. By minimizing the makespan, we achieve a balanced load among expedition ramps which often leads to good utilization of machines \cite{pinedo}. 
- 
- Since the duration of the truck expedition is unknown, we approximate its duration using average processing times $\overline{p}$ as follows:
- 
- \begin{equation}
-     duration = quantity \cdot \overline{p} + reserve
- \end{equation}
- 
- This problem of distributing trucks among ramps can be formulated as a linear program as follows:
- 
-\begin{itemize}
-\item $x_{ij}$: 1 if truck $i$ is assigned to ramp $j$, 0 otherwise
-\item$c_i$: completion time of expedition on a ramp $i$
-\end{itemize}
-\textbf{Data}
-\begin{itemize}
-\item$d_i$: approximation of expedition duration of a truck $i$
-\end{itemize}
-
-\begin{equation}
-\begin{aligned}
-&\text{minimize}
-&&\max(c_0, c_1, \ldots, c_n)
-\end{aligned}
-\end{equation}
-\begin{equation}
-\begin{aligned}
-\text{subject to}\\
-& \sum_{i=0}^{n} x_{ij} = 1 &&\\
-& d_0x_{i0} + d_1x_{0j} + \ldots + d_nx_{nj} = c_j && \text{for}\; j = 1, \ldots, m\\
-\end{aligned}
-\end{equation}
+ There are $m$ ramps in parallel and $n$ trucks planned for a day. Ramps can be interpreted as machines in parallel and jobs as the whole expedition of each truck. Since each ramp includes only one scanner, which acts are a bottleneck in the warehouse, the objective of this problem is to distribute expedition among ramps uniformly. In other words, workers at each expedition ramp should ideally work the same hours and do the same amount of work.
  
 \subsection{Expedition in the automated warehouse as machine scheduling model}
 
@@ -242,7 +213,16 @@ Alternatively, we can formulate this problem (with single expedition ramp) as a 
 
 Main requirements of this problem are to make a schedule that fits into working hours of the warehouse and make the schedule robust to random events. For example, the arrival of an item from production can postpone scheduled job at a machine for a whole duration of storing the item, and that can lead to loading items in the wrong order and filling buffer at a scanner. 
 
-In this thesis, objective of this problem is described as minimization of sum of weighted sub-objectives. These are the objectives that were selected:
+In this thesis, objective of this problem is described as minimization of sum of weighted sub-objectives.
+
+Objective:
+
+\begin{equation}
+    score = \alpha T + \beta R + \gamma  U
+\end{equation}
+
+Sub-objectives:
+
 \begin{enumerate}
 \item \textbf{Tardiness} $(T)$\\ \begin{equation}\max(\max_{i=0,\ldots,n}( c_i - end), 0)\end{equation}
 why*
@@ -260,19 +240,25 @@ why*
 
  These objectives were selected mostly based on reading on objective functions and robustness in \cite{pinedo} and \cite{tkindt}* and experimenting in the simulation tool. 
  
- Experimenting with these objectives and their effect is shown in chapter \ref{ch:Evaluation}.
+ Experimenting with these objectives, their effect and trade-off between them is shown in chapter \ref{ch:Evaluation}.
 
 \chapter{Related work}
+\label{chap:Related work}
+Methods for solving various forms of scheduling problems were extensively studied for decades now. Many of these methods are summarized in \cite{pinedo} and \cite{bucker}. We will mainly discuss methods that are applicable to the flexible flow line and parallel machine problem, which are relevant for this thesis. 
 
-Methods for solving various forms of scheduling problems were extensively studied for decades now. Many of these methods are summarized in \cite{pinedo} and \cite{bucker}. We will mainly discuss the flexible flow line and parallel machine problem, which are relevant for this thesis. 
+\section{Overview of methods and approaches for finding optimal or nearly optimal schedule}
 
-\section{Overview of methods and approaches for finding optimal schedule}
+Both problems we consider in this thesis are NP-hard \cite{complexity} and finding an optimal solution is not an easy task. For finding optimal schedule, seemingly two general methods are used, Linear Integer Programming (LP) and Constraint Programming (CP) with combination of Branch-and-Bound methods, approximation of initial bounds, etc.. LP approach is often obsolete for real-world problems, where there are hundreds or thousands jobs to schedule. CP is in many cases similar to LP, but offers better flexibility for designing constraints and can be optimized for specific problems and because of it it often outperforms LP.
 
-Both problems we consider in this thesis are NP-hard \cite{complexity}. For finding optimal schedule, seemingly two general methods are used, Mixed-Integer Programming (MIP) and Constraint Programming (CP) with combination of Branch-and-Bound methods, approximation of initial bounds, etc.. MIP approach is usually obsolete for real-world problems, where there are hundreds or thousands jobs to schedule. CP is in many cases similar to MIT, but offers better flexibility for designing constraints and 
+*I will describe CP here
+
+*There are few special cases where optimal schedule can be obtained using some constructing heuristics. 
+
+In following sections, methods for our problems that are often used in literature are discussed.
 
 \subsection{Parallel machine model}
 
-There are few construction heuristics from which we can construct a schedule that guarantees an upper bound of the makespan \cite{gram}. One of these heuristics is The Longest Processing Time first (LPT) heuristics \cite{pinedo} that guarantees that:
+There are few construction heuristics from which we can construct a schedule that guarantees an upper bound of the makespan \cite{gram}. One of these heuristics is The Longest Processing Time first (LPT) heuristics \cite{pinedo} that guarantees that \cite{gram1969}:
 
 \begin{equation}
 \dfrac{C_{max}(LPT)}{C_{max}(OPTIMAL)} \leq \dfrac{4}{3} - \dfrac{1}{3m}
@@ -280,35 +266,131 @@ There are few construction heuristics from which we can construct a schedule tha
 
 Where $m$ is number of parallel machines.
 
-There are heuristics with slightly tighter bounds and are useful for problems with many jobs, many machines or both. 
+There are heuristics with slightly tighter bounds and are useful for problems with many jobs, many machines or both. I 
 
 \subsection{Flexible flow line model}
 
 For small instances or simple cases of scheduling problem there often exists dispatching rules from which we are able to construct optimal schedule for objectives like makespan or total flow time. For many practical problems or uncommon objectives, it is hard to recognize 
 
 \section{Value of finding optimal solution}
-Finding optimal solution is not really worth it in real world problems. Furthermore solving these problems with CSP or MIT requires too much processing time. Even in literature they are saying that around 50 jobs is the limit. 
+Finding optimal solution is not really worth it in real world problems. Furthermore solving these problems with CSP or LP requires too much processing time. Even in literature they are saying that around 50 jobs is the limit. 
 \section{Solving scheduling problems in practice}
 In practice solution is usually constructed using some simple heuristics. Complex heuristics is not really worth using because of random events. Questions usually is what should I try to improve and what heuristics should be good for that. 
 
 FFLL 
 \chapter{Proposed solution}
 \label{ch:Proposed solution}
-\section{Constraint satisfaction problem formulation}
-\section{Algorithm description}
-Heuristic construction algorithm
 
-1. Truck allocation
+The proposed algorithm is designed in a way so that it is simple and fast so that it can be easily applicable in practice and the provided simulation tool.
 
-First of all, trucks are distributed to ramps to achieve good utilization. There are some heuristics for this, but this task can be solved using MIP. For cases where MIP is too slow, LPT heuristics can solve it with error 4/3 - 1/3m 
-\cite{gram1969}
+It consists of four different phases.
+
+\begin{enumerate}
+    \item Truck allocation
+    \item Job dispatching
+    \item Idle time insertion
+    \item Re-ordering
+\end{enumerate}
+
+As mentioned in \ref{simplicity}, focusing on optimality of a schedule rather than simplicity does not perform well in practice. That being said, in the first phase algorithm optimally assign trucks to ramps. In the second phase, however, heuristic construction is used to get good feasible solution in relatively short time. In the third phase, we insert idle times in between completion time $c_i$ to achieve good robustness to delays caused by prioritized production handling. The last phase is used to further improve on assignments or insertion second and third phases did.
+
+\section{Truck allocation}
+
+\subsection{Objective}
+
+Goal of this stage is to distribute trucks among expedition ramps so that workers at each ramp work almost the same time and do the same amount of work. In other words this can be formulated as minimization of makespan. By minimizing the makespan, we achieve a balanced load among expedition ramps which often leads to good utilization of machines or in our cases expedition ramps \cite{pinedo}. 
+
+ Objective function:
+ 
+ \begin{equation}
+     \min(\max(ct_0, ct_1, \ldots, ct_n))
+ \end{equation}
+ 
+ *If we take only quantity, works at each ramp do almost the same amount of work. If we take average processing time and setup times, workers work the same hours, but workers at some ramps may be slacking. Weighted duration and processing time seems most reasonable.
+
+\subsection{Algorithm}
+
+In many factories as well as in the automated warehouse, there are not many scheduled trucks in a day (under 50). On top of that, it's objective and problem description is very simple. This makes this problem a good example where CP or LP is effective. Even for it being a real-world problem, finding optimal solution for this case is valuable since stochastic events like "need to reschedule a truck to different ramp" or "truck needs more or less items than it originally demanded" do not occur very often.
+
+This problem of distributing trucks among ramps can be formulated as LP and CP problem as follows:\\
+
+\noindent \textbf{Decision variables}
+
+\begin{itemize}
+\item $x_{ij}$: 1 if truck $i$ is assigned to ramp $j$, 0 otherwise
+\item$ct_i$: completion time of expedition on a ramp $i$
+\end{itemize}
+\textbf{Data}
+\begin{itemize}
+\item$d_i$: approximation of expedition duration of a truck $i$
+\end{itemize}
+
+Since the duration of the truck expedition is unknown, we approximate its duration using average processing times $\overline{p}$ as follows:
+
+\begin{equation}
+     duration = quantity \cdot \overline{p} + reserve
+\end{equation}
+ 
+\subsubsection{LP Model}
+
+\begin{equation}
+\begin{aligned}
+\text{minimize}\\
+&&\max(ct_0, ct_1, \ldots, ct_m)
+\end{aligned}
+\end{equation}
+\begin{equation}
+\begin{aligned}
+\text{subject to}\\
+& \sum_{i=0}^{n} x_{ij} = 1 &&\\
+& d_0x_{0j} + d_1x_{1j} + \ldots + d_nx_{nj} = ct_j && \text{for}\; j = 1, \ldots, m\\
+\end{aligned}
+\end{equation}
+
+\subsubsection{CP model}
+
+\begin{itemize}
+    \item Variables:\\
+    \begin{equation}
+        x_{00}, x_{01}, \ldots, x_{0r}, \ldots, x_{nm}
+    \end{equation}
+    \begin{equation}
+        ct_0, \ldots, ct_m
+    \end{equation}
+    \item Domains\\
+    \begin{equation}
+    x_{ij} \in \{0, 1\}
+    \end{equation}
+    \begin{equation}
+    ct_{i} \in \{ d_i, d_i + step, \ldots, upper\_bound\}
+    \end{equation}
+    \item Constraints
+    \begin{equation}
+    \begin{aligned}
+    & \sum_{i=0}^{n} x_{ij} = 1 &&\\
+    & d_0x_{0j} + d_1x_{1j} + \ldots + d_nx_{nj} = ct_j && \text{for}\; j = 1, \ldots, m\\
+    \end{aligned}
+    \end{equation}
+    \item Objective function\\
+    \begin{equation}
+        makespan = \max(ct_0, ct_1, \ldots, ct_m)
+    \end{equation}
+    \item Goal\\
+    \begin{equation}
+        \min(makespan)
+    \end{equation}
+\end{itemize}
+
+Upper bound is calculated using LPT heuristics mentioned in chapter \ref{chap:Related work}, which can improve performance of both LP and CP approach. 
+
+In CP approach, LPT heuristics can also be used for ordering of variables. This way the algorithm redistributes trucks with lower load first, which can lead to uniformly distributed workload faster.
 
 
-2. Order of jobs + dispatching
+\section{Job dispatching}
 
 Using hybrid cyclic heuristics we can distribute jobs quite equally among machines and also try to minimize makespan or other objectives
 
-3. Distribute available time as idle times
+\section{Idle time insertion}
 
 Now that we know how long is schedule, we can tell how much time we have until work hours end. We can take this time a distribute it among items as idle times. We cannot just simply postpone jobs by idle time, we have run step 2. again, now with idle times.
 
