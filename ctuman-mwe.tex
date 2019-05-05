@@ -312,7 +312,7 @@ Goal of this stage is to distribute trucks among expedition ramps so that worker
 
 In many factories as well as in the automated warehouse, there are not many scheduled trucks in a day (under 50). On top of that, it's objective and problem description is very simple. This makes this problem a good example where CP or LP is effective. Even for it being a real-world problem, finding optimal solution for this case is valuable since stochastic events like "need to reschedule a truck to different ramp" or "truck needs more or less items than it originally demanded" do not occur very often.
 
-This problem of distributing trucks among ramps can be formulated as LP and CP problem as follows:\\
+This problem of distributing trucks among ramps can be formulated as LP or CP problem as follows:\\
 
 \noindent \textbf{Decision variables}
 
@@ -385,7 +385,6 @@ To improve performance of these methods we need to select upper bound of the obj
 
 \textbf{Upper bound} is calculated using LPT heuristics mentioned in chapter \ref{chap:Related work}.
 
-\textbf{Lower bound}*
 
 In CP approach, LPT heuristics can also be used for ordering of variables. This way the algorithm redistributes trucks with lower load first, which can lead to uniformly distributed workload faster.
 
