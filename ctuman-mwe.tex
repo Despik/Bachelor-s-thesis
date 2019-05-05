@@ -381,7 +381,11 @@ Since the duration of the truck expedition is unknown, we approximate its durati
     \end{equation}
 \end{itemize}
 
-Upper bound is calculated using LPT heuristics mentioned in chapter \ref{chap:Related work}, which can improve performance of both LP and CP approach. 
+To improve performance of these methods we need to select upper bound of the objective and variables.
+
+\textbf{Upper bound} is calculated using LPT heuristics mentioned in chapter \ref{chap:Related work}.
+
+\textbf{Lower bound}*
 
 In CP approach, LPT heuristics can also be used for ordering of variables. This way the algorithm redistributes trucks with lower load first, which can lead to uniformly distributed workload faster.
 
