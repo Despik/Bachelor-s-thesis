@@ -1,4 +1,5 @@
 \documentclass{ctuthesis}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
 
 \ctusetup{
 	xdoctype = B,
@@ -96,7 +97,7 @@ Properties to consider are prioritization of production handling, limited throug
 
 This section describes additional details regarding the warehouse and expedition on top of the description in \ref{subsec:Description} to be able to state scheduling problem properly.
 
-\subsection{Details of the automated warehouse}
+\subsection{Additional details of the automated warehouse}
 
 
 Scanners, which are located at the end of every expedition conveyor, accepts an item periodically. Since the scanner is processing items in the given interval, there has to be space between items on conveyor based on the speed of the conveyor and the duration of the interval. If many items arrive too soon after each other, they pile up and may cause the conveyor to stop, which should never happen. To prevent stopping of and conveyor, there is a small buffer. The number of items that pile up in the buffer during a daily expedition will be one of the measurements of robustness to delays.
@@ -104,19 +105,24 @@ Scanners, which are located at the end of every expedition conveyor, accepts an 
 We also simplify our problem and assume that workers at the loading ramp can always pick up an item coming from the scanner. That means that scanners then create bottlenecks for each expedition ramp where throughput is limited by the frequency at which scanner can process items.
 
 \subsection{Expedition scenario}
-
-We consider expedition is spanned over part of one day. During the expedition, a truck can arrive at an expedition ramp at a scheduled time and demand a certain number of items of different types and order of these types in which they should be loaded into the truck for practical reasons. Items are loaded into a truck in order in which they are processed by a scanner. At each ramp, trucks arrive and leave one after each other. After the expedition of a truck is finished, there is reserved time after which the next truck can arrive to correspond more to reality. 
+\label{expedition}
+We consider expedition is spanned over a part of one day. During the expedition, a truck can arrive at an expedition ramp at a scheduled time and demand a certain number of items of different types and order of these types in which they should be loaded into the truck for practical reasons. Items are loaded into a truck in order in which they are processed by a scanner. At each ramp, trucks arrive and leave one after each other. After the expedition of a truck is finished, there is reserved time after which the next truck can arrive to correspond more to reality. 
 
 Which specific items will be expedited is known in advance and is expected that these items are distributed uniformly across all aisles.
+
+\subsection{Expectation for a good schedule}
+
+When a good schedule is used in real world (or in our case the simulation tool) it is expected that it performs as expected and differences between the schedule and reality is minimal. Additionally, it should also try to satisfy all expedition requirements mentioned in sections \ref{expedition}.
 
 \subsection{Available information}
 
 Several basic parameters provided for the given automated warehouse. These parameters include horizontal and vertical speeds and accelerations of stacker cranes, dimensions of a warehouse, speed and length of conveyors, duration of scanning an item, duration of grabbing an item from a conveyor, duration of putting an item on a conveyor and exact location of each item stored in the warehouse. For the expedition, we know count, types, and order at which items should be loaded for each truck. 
 
-From these parameters, we can calculate data needed for describing machine scheduling model.
+From these parameters, we can obtain data needed for describing machine scheduling model.
 
-\section{Notation and terminology}*
 
+\section{Notation and terminology}
+in progress\\
 \noindent \textbf{Job} ($job_i$) A $job_i$ represents an item $i$ to be expedited. Since expedition items are known in advance $job_i$ is already associated with one of the stacker cranes. 
 
 \noindent \textbf{Machine} ($m_i$) A $m_i$ represents a stacker crane or a scanner. 
@@ -130,11 +136,13 @@ From these parameters, we can calculate data needed for describing machine sched
 
 \noindent \textbf{Completion time} ($c_i$)
 
+\noindent \textbf{Assigned ramp} ($r_i$)
+
+\noindent \textbf{Set of ramp ids} ($R$)
+
 \noindent \textbf{Completion time of a truck} ($ct_i$)
 
 \noindent \textbf{Start time} ($s_i$)
-
-\noindent \textbf{Reserve}
 
 \noindent \textbf{Stacker crane completion time} ($scc_i$)
 
@@ -143,6 +151,8 @@ From these parameters, we can calculate data needed for describing machine sched
 \noindent \textbf{Position in expedition} ($pos_i$)
 
 \noindent \textbf{Makespan}
+
+\noindent \textbf{Reserve}
 
 \noindent \textbf{Average flow time}
 
@@ -153,13 +163,13 @@ From these parameters, we can calculate data needed for describing machine sched
 
 \section{Scheduling problem}
  
- The problem of expedition scheduling in the automated warehouse can be separated into two problems. The first problem is dealing assignment of ramps to trucks and order of trucks at which they arrive. The second problem occurs after the first problem, and it deals with the assignment of completion times to jobs only since machines are predetermined. This thesis mostly tackles the second problem since a good solution to the first problem is fairly easy to get as is shown in chapter \ref{ch:Proposed solution} and scheduling of the second problem has a greater effect on the overall quality of the schedule. *Quality of solution to the 1st problem depends on quality of solution of 2nd problem, address it* 
+ The problem of expedition scheduling in the automated warehouse can be separated into two problems. The first problem is dealing assignment of ramps to trucks and order of trucks at which they arrive. The second problem occurs after the first problem, and it deals with the assignment of completion times to jobs only since machines are predetermined. This thesis mostly tackles the second problem since a good solution to the first problem is fairly easy to get as is shown in chapter \ref{ch:Proposed solution} and scheduling of the second problem has a greater effect on the overall quality of the schedule.
  
  \subsection{Scheduling trucks}
  
  We will formulate this problem as parallel machine model.
  
- There are $m$ ramps in parallel and $n$ trucks planned for a day. Ramps can be interpreted as machines in parallel and jobs as the whole expedition of each truck. Since each ramp includes only one scanner, which acts are a bottleneck in the warehouse, the objective of this problem is to distribute expedition among ramps uniformly. In other words, workers at each expedition ramp should ideally work the same hours and do the same amount of work.
+ There are $m$ ramps in parallel and $n$ trucks planned for a day. Ramps can be interpreted as machines in parallel and jobs as the whole expedition of each truck. Since each ramp includes only one scanner, which acts as a bottleneck in the warehouse, the objective of this problem is to distribute expedition among ramps uniformly to utilize these ramps. In other words, workers at each expedition ramp should ideally work the same hours and do the same amount of work.
  
 \subsection{Expedition in the automated warehouse as machine scheduling model}
 
@@ -278,10 +288,12 @@ Finding optimal solution is not really worth it in real world problems. Furtherm
 In practice solution is usually constructed using some simple heuristics. Complex heuristics is not really worth using because of random events. Questions usually is what should I try to improve and what heuristics should be good for that. 
 
 FFLL 
+
+
 \chapter{Proposed solution}
 \label{ch:Proposed solution}
 
-The proposed algorithm is designed in a way so that it is simple and fast so that it can be easily applicable in practice and the provided simulation tool.
+The proposed algorithm is designed in a way so that it is relatively simple and fast so that it can be easily applicable in practice and the provided simulation tool.
 
 It consists of four different phases.
 
@@ -292,23 +304,22 @@ It consists of four different phases.
     \item Re-ordering
 \end{enumerate}
 
-As mentioned in \ref{simplicity}, focusing on optimality of a schedule rather than simplicity does not perform well in practice. That being said, in the first phase algorithm optimally assign trucks to ramps. In the second phase, however, heuristic construction is used to get good feasible solution in relatively short time. In the third phase, we insert idle times in between completion time $c_i$ to achieve good robustness to delays caused by prioritized production handling. The last phase is used to further improve on assignments or insertion second and third phases did.
+As mentioned in \ref{simplicity}, focusing on optimality of a schedule rather than simplicity does not perform well in practice. That being said, in the first phase algorithm optimally assign trucks to ramps. In the second phase, however, heuristic construction is used to get a good solution in relatively short time. In the third phase, we insert idle times in between completion time $c_i$ to achieve good robustness to delays caused by prioritized production handling \cite{pinedo}. The last phase is used to further improve on assignments or insertions, which were made in the second and the third phases using local search techniques.
+
+\begin{figure}[h]
+\includegraphics[width=0.8\linewidth]{algo.jpg}
+\caption{Illustration of phases one to three of the algorithm.}
+\end{figure}
 
 \section{Truck allocation}
 
-\subsection{Objective}
-
-Goal of this stage is to distribute trucks among expedition ramps so that workers at each ramp work almost the same time and do the same amount of work. In other words this can be formulated as minimization of makespan. By minimizing the makespan, we achieve a balanced load among expedition ramps which often leads to good utilization of machines or in our cases expedition ramps \cite{pinedo}. 
+Goal of this phase is to distribute trucks among expedition ramps so that workers at each ramp work almost the same time and do the same amount of work. In other words this can be formulated as minimization of makespan. By minimizing the makespan, we achieve a balanced load among expedition ramps which often leads to good utilization of machines or in our cases expedition ramps \cite{pinedo}. 
 
  Objective function:
  
  \begin{equation}
      \min(\max(ct_0, ct_1, \ldots, ct_n))
  \end{equation}
- 
- *If we take only quantity, works at each ramp do almost the same amount of work. If we take average processing time and setup times, workers work the same hours, but workers at some ramps may be slacking. Weighted duration and processing time seems most reasonable.
-
-\subsection{Algorithm}
 
 In many factories as well as in the automated warehouse, there are not many scheduled trucks in a day (under 50). On top of that, it's objective and problem description is very simple. This makes this problem a good example where CP or LP is effective. Even for it being a real-world problem, finding optimal solution for this case is valuable since stochastic events like "need to reschedule a truck to different ramp" or "truck needs more or less items than it originally demanded" do not occur very often.
 
@@ -330,22 +341,6 @@ Since the duration of the truck expedition is unknown, we approximate its durati
 \begin{equation}
      duration = quantity \cdot \overline{p} + reserve
 \end{equation}
- 
-\subsubsection{LP Model}
-
-\begin{equation}
-\begin{aligned}
-\text{minimize}\\
-&&\max(ct_0, ct_1, \ldots, ct_m)
-\end{aligned}
-\end{equation}
-\begin{equation}
-\begin{aligned}
-\text{subject to}\\
-& \sum_{i=0}^{n} x_{ij} = 1 &&\\
-& d_0x_{0j} + d_1x_{1j} + \ldots + d_nx_{nj} = ct_j && \text{for}\; j = 1, \ldots, m\\
-\end{aligned}
-\end{equation}
 
 \subsubsection{CP model}
 
@@ -362,7 +357,7 @@ Since the duration of the truck expedition is unknown, we approximate its durati
     x_{ij} \in \{0, 1\}
     \end{equation}
     \begin{equation}
-    ct_{i} \in \{ d_i, d_i + step, \ldots, upper\_bound\}
+    ct_{i} \in \{start+  d_i, start + d_i + step, \ldots, start + upperBound\}
     \end{equation}
     \item Constraints
     \begin{equation}
@@ -381,26 +376,111 @@ Since the duration of the truck expedition is unknown, we approximate its durati
     \end{equation}
 \end{itemize}
 
-To improve performance of these methods we need to select upper bound of the objective and variables.
-
-\textbf{Upper bound} is calculated using LPT heuristics mentioned in chapter \ref{chap:Related work}.
+To improve performance of these methods we need to select \textbf{upper bound} of the objective and variables. Upper bound is calculated using LPT heuristics mentioned in chapter \ref{chap:Related work}.
 
 
-In CP approach, LPT heuristics can also be used for ordering of variables. This way the algorithm redistributes trucks with lower load first, which can lead to uniformly distributed workload faster.
+*In CP approach, LPT heuristics can also be used for ordering of variables. This way the algorithm redistributes trucks with lower load first, which can lead to uniformly distributed workload faster.
 
 
 \section{Job dispatching}
 
-Using hybrid cyclic heuristics we can distribute jobs quite equally among machines and also try to minimize makespan or other objectives
+At this phase, we need to assign a completion time and an expedition ramp to an item from the warehouse. Assigning a ramp and a completion time to all items results in a completed schedule for warehouse expedition. 
+
+\begin{figure}[h]
+\includegraphics[width=0.8\linewidth]{order.jpg}
+\caption{Diagram showing an ordering at which items are expedited.}
+\label{order}
+\end{figure}
+
+To be able to tell what is a feasible schedule and further describe this algorithm, we formulate this problem as a CSP. 
+
+\subsubsection{CSP model}
+
+\begin{itemize}
+    \item Variables:\\
+    \begin{equation}
+        V = \{c_{0}, c_{1}, \ldots, x_{n}\}
+    \end{equation}
+    \begin{equation}
+        W = \{r_0, \ldots, r_m\}
+    \end{equation}
+    \item Domains\\
+    \begin{equation}
+    c_{i} \in C_i = \{start, ..., end\}
+    \end{equation}
+    \begin{equation}
+    r_{i} \in R
+    \end{equation}
+    \item Constraints
+    \begin{equation}
+    \begin{aligned}
+    & noOverlap(c_i, r_i, c_j, r_j) &&\text{for } i=0,\ldots,n; j=0,\ldots,m\\
+    & correctPosition(c_i, r_i, V, W) && \text{for } i=0,\ldots,n
+    \end{aligned}
+    \end{equation}
+\end{itemize}
+
+Constraint $noOverlap$ prevents machines, conveyors and scanners to process more than one item at a time. Schedule is feasible if function $noOverlap$ is $True$ for every pair $i$,$j$.
+\label{overlap}
+\begin{algorithm}
+\SetAlgoLined
+\SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+\Input{$c_i$ - completion time of an item $i$, $c_j$ - completion time of an item $j$, $r_i$ ramp to which item $i$ is assigned, $r_j$ ramp to which an item $j$ is assigned\\}
+\Output{$True$ - Process of unloading items $i$ and $j$ does not overlap, $False$ - Process of unloading items $i$ and $j$ overlaps either at stacker crane, scanner or a conveyor}
+$TBD$
+ \caption{Constraint - noOverlap}
+\end{algorithm}
+
+Goal of this phase is to create a feasible schedule. To obtain it, a constructive heuristic method is proposed. This method assigns values to variables in a way that after assigning value to every variable, we get feasible solution without a need to backtrack.
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwResult{A feasible schedule S}
+  $items \leftarrow$ order $items$\;
+ \For{$position \leftarrow 0$ \KwTo n}{
+  $machines \leftarrow$ order machines\;
+  \ForEach{$machine$ in $machines$}{
+    $ramp \leftarrow$ select a ramp\;
+    \ForEach{$i$ in $items$}{
+    \If{$m_i = machine \wedge type_i = e_{position}$}{
+    \ForEach{$time$ in $C_i$}{
+    \If{$S \cup \text{\{i, time, ramp\} is feasible}$}{
+    Add \{i, time, ramp\} to solution S\;
+    $items \leftarrow items \setminus \{i\}$\;
+    $timeAssigned \leftarrow True$\;
+    \textbf{goto} $mainLoopEnd$\;
+}
+}
+}
+}
+}
+[mainLoopEnd]\\
+}
+\caption{Heuristic construction}
+\end{algorithm}
+
+\subsubsection{Items ordering}
+TBD
+We need to select order at which a demanded item is expedited (see figure \ref{order})
+\subsubsection{Hybrid cyclic heuristics (Machines and ramp ordering)}
+TBD
+\subsubsection{$C_i$ ordering}
+TBD
 
 \section{Idle time insertion}
 
-Now that we know how long is schedule, we can tell how much time we have until work hours end. We can take this time a distribute it among items as idle times. We cannot just simply postpone jobs by idle time, we have run step 2. again, now with idle times.
+Goal of this phase is to take advantage of remaining working hours and spread the expedition through the whole day. Since order at which items are expedited is one of the requirements (subsection \ref{expedition}), inserting idle times is crucial for minimizing error in ordering due to delays caused by production handling.
+
+Having feasible schedule, we know how long it is and we can tell approximately how much time we have until work hours end. We can take this time a distribute it among items as idle times. Unless there is only single expedition ramp, we cannot simply determine where or how big idle times we should insert, we have to run step 2 of the algorithm again after any insertion of idle times.
+
+Each scheduled item is associated with an idle time, which follows after completion time of the item. Other items cannot be scheduled after some item $i$ for its duration of idle time.
+
+TBD
+
+Idle times should be distributed uniformly to prevent buffer overflow too, but some items can benefit more from idle times (last item of its type).  Assign weights to each item (bigger weight, more likely to increase idle time). I propose distributing remaining time uniformly. Try distribute remaining time, if schedule is too long, try remaining time / 2, etc. until remaining time is < something. After that run simulated annealing to distribute the rest.
 
 \section{Meta-heuristics}
-Local search (Tabu, simulated annealing)
-
-In scenario where we have more than one ramp, it's not easy to tell how much time I can distribute as idle time. Simulated annealing with ordered moves is good for distributing idle times among jobs. It can basically replace step 3 of proposed algorithm if it wasn't slower. It's better to use it after step 4 to distribute small timeslots to take advantage of remaining time of expedition.
+Above is also local search, maybe merge?.
 
 Another improvement is using tabu search which swaps order number of two items. Some objectives are not easily minimized using some heuristics in step 2 like for example weighted penalty for scheduling two jobs right after each other on a single machine because it can lead to stopping a production
 
