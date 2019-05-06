@@ -280,7 +280,7 @@ There are heuristics with slightly tighter bounds and are useful for problems wi
 
 \subsection{Flexible flow line model}
 
-For small instances or simple cases of scheduling problem there often exists dispatching rules from which we can construct an optimal schedule for objectives like makespan or total flow time. For many practical problems or uncommon objectives, it is hard to recognize 
+For small instances or simple cases of scheduling problem there often exists dispatching rules from which we can construct an optimal schedule for objectives like makespan or total flow time. For many practical problems or uncommon objectives it is hard to find optimal or sometimes even good heuristics. We can look how some heuristics perform on simple cases and try to apply it on our problem. 
 
 \section{Value of finding optimal solution}
 Finding an optimal solution is not worth it in real-world problems. Furthermore solving these problems with CSP or LP requires too much processing time. Even in literature, they are saying that around 50 jobs are the limit. 
@@ -386,12 +386,6 @@ To improve the performance of these methods we need to select \textbf{upper boun
 
 At this phase, we need to assign a completion time, and an expedition ramp to an item from the warehouse. Assigning a ramp and a completion time to all items results in a completed schedule for warehouse expedition. 
 
-\begin{figure}[h]
-\includegraphics[width=0.8\linewidth]{order.jpg}
-\caption{Diagram showing an ordering at which items are expedited.}
-\label{order}
-\end{figure}
-
 To be able to tell what is a feasible schedule and further describe this algorithm, we formulate this problem as a CSP. 
 
 \subsubsection{CSP model}
@@ -419,6 +413,8 @@ To be able to tell what is a feasible schedule and further describe this algorit
     \end{aligned}
     \end{equation}
 \end{itemize}
+
+*correctPosition
 
 Constraint $noOverlap$ prevents machines, conveyors and scanners to process more than one item at a time. Schedule is feasible if function $noOverlap$ is $True$ for every pair $i$,$j$.
 \label{overlap}
@@ -461,9 +457,16 @@ The goal of this phase is to create a feasible schedule. To obtain it, a constru
 
 \subsubsection{Items ordering}
 TBD
-We need to select order at which a demanded item is expedited (see figure \ref{order})
+
 \subsubsection{Hybrid cyclic heuristics (Machines and ramp ordering)}
 TBD
+
+We need to select order at which a demanded item is expedited (see figure \ref{order})
+\begin{figure}[h]
+\includegraphics[width=0.8\linewidth]{order.jpg}
+\caption{Diagram showing an ordering at which items are expedited.}
+\label{order}
+\end{figure}
 \subsubsection{$C_i$ ordering}
 TBD
 
