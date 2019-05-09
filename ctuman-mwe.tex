@@ -59,21 +59,39 @@ test \ldots
 
 Scheduling is a well studied and practical topic. It is widely used in manufacturing facilities, warehouses, which are discussed in this thesis, and many other industries where proper scheduling can play a great role in their success. Despite its importance and years of research, scheduling is quite a challenging problem, especially when it comes to real-world problems where finding an optimal schedule is usually nearly impossible due to its high computational complexity. 
 
-Since the beginning of research in scheduling, many methods and approaches were developed for finding schedules close to optimal schedule in a reasonable time, but what is a good or optimal schedule? Determining the objective of a schedule is a problem on its own. The usual objective of scheduling is to minimize the makespan, which is the length of a schedule, but this objective alone is not sufficient because of the stochastic nature of real-world problems and customized requirements some facility may demand. Many facilities demand different and complex objectives. For example, in case of an automated warehouse, it may be crucial to not only finish expedition in required time but to also expedite items in the required order. 
+Since the beginning of research in scheduling, many methods and approaches were developed for finding schedules close to optimal schedule in a reasonable time, but what is a good or optimal schedule? Determining the objective of a schedule is a problem on its own. The usual objective of scheduling is to minimize the makespan, which is the duration of a schedule. This objective alone is usually not sufficient because it does not consider the stochastic nature of real-world, where random events can change the schedule for the worse. In that case, the most valuable schedule might be the one where these random events change a schedule the least and makespan is still small. Another reason why makespan or other simple objectives that are often mentioned in literature might not be sufficient is that some facilities may demand complex customized requirements tailored just for them. For example, in case of an automated warehouse, it may be crucial to not only finish expedition in required time but to also expedite items in the required order. 
 
-In this thesis, general methods for solving scheduling problems relevant to scheduling a daily expedition of the given automated warehouse configuration are discussed. Then, method and an objective of a schedule for the given automated warehouse and scenario is proposed and finally proposed method is implemented and evaluated based on results from the provided simulation tool. Basic structure and functionality of an automated warehouse were provided and are described in the upcoming section.
+In this thesis, general methods for solving scheduling problems relevant to scheduling a daily expedition of the given automated warehouse configuration are discussed. Then, method and an objective of a schedule for the given automated warehouse and scenario is proposed. Finally, proposed method is implemented and evaluated based on results from the provided simulation tool. 
 
 \section{The automated warehouse}
 
-There are many different types of automated warehouses with very different requirements, structures, and functionality. The problem of scheduling an expedition can be very different based on the structure and the type of an automated warehouse. In this thesis, we consider one of the structures of automated warehouses that is fairly common and is based on a real-world problem. 
+There are many different types of automated warehouses with very different requirements, structures, and functionality. The problem of scheduling an expedition can be very different based on the structure and the type of an automated warehouse. The basic structure and functionality of an automated warehouse based on a real-world problem were provided for this thesis and can be described as follows.
 
 \subsection{Description}
 \label{subsec:Description}
-The automated warehouse is part of a factory that produces some items. These items are stored in their warehouse and can be expedited. The automated warehouse has given number of aisles. Each aisle has racks on each side, where items are stored and on each aisle operates a single stacker crane. On one side of each aisle are connected, two conveyors. The first conveyor is moving items from an aisle to one of the expedition ramps, where trucks can be loaded, and the second is bringing in items from production. Before each item reaches an expedition ramp, it needs to be processed by a scanner, which is located at the end of the first conveyor.
+The automated warehouse is part of a factory. This factory stores products to the automated warehouse from which they are at some point expedited. Firstly, we describe production together with the automated warehouse and secondly we describe the expedition process.
 
-When a truck arrives at expedition ramp, stacker cranes should start unloading items on conveyor leading to the expedition ramp. Stacker cranes can move vertically and horizontally in an aisle and can hold a single item each. Stacker crane which has the requested item in its aisle moves to the item grabs it and put it on the conveyor. In case of an item arriving from production to an aisle. Stacker crane on that aisle should take this item and store in a free position in the aisle. Stacker cranes operate automatically and either stores an item from production if it is available or execute scheduled unloadings. If an item arrives from production, stacker cranes prioritize storing an item. It means that as soon as a stacker crane finishes action in progress, it stores an item from production even if it means delaying scheduled unloadings.
+\subsubsection{Production and the automated warehouse}
 
-Additional details are stated in \ref{sec:Automated warehouse}.
+Factory produces up to 20 thousand items throughout a whole day. Items come in hundreds of different types, which may differ in size, material or in other properties, which are not important for this thesis. Since the warehouse is automated, items must have suitable weight and size to be handled by a stacker crane and to be stored in high-bay racks. The example of such items are tires or pallets of different sodas. Produced items are directly put one-by-one on the conveyor leading to the warehouse, where an item is pushed off the conveyor to the production buffer of one of the aisles.
+
+The automated warehouse has given number of aisles. Each aisle has high-bay racks on both sides and is connected to two conveyors at the beginning of it. The first conveyor is moving items from an aisle to one of the expedition ramps, and the second is bringing in items from production. Each aisle has a single stacker crane operating on it.
+
+Stacker cranes operate automatically and can either store an item from production if it is available or execute scheduled unloadings. 
+
+//detailed stacker crane
+If stacker crane is requested to unload an item, it moves to the position of an item, grabs it and moves to the beginning of an aisle, where it puts the item on the conveyor leading to a expedition ramp. In case of an item arriving from production to an aisle's production buffer. Stacker crane should retrieve this item from the production buffer and store in a free position in the aisle. If any production buffer overflows, production would have to be stopped, for that reason, stacker cranes prioritize storing of an item over unloading. It means that as soon as a stacker crane finishes an operation in progress, it stores an item from production even if it means delaying scheduled unloadings.
+
+\subsubsection{Daily expedition}
+Expedition is spanned over a part of one day. During the expedition, a truck can arrive at an expedition ramp at a scheduled time. Only one truck and be loaded at a time at each expedition ramp. There is also reserved time after which the next truck can arrive. Every truck requests a certain number of items of different types and order of these types in which they should be loaded into the truck for practical reasons. Which specific items will be expedited is known in advance and is expected that these items are distributed uniformly across all aisles. 
+
+Before each item reaches an expedition ramp, it needs to be processed by a scanner, which is located at the end of the conveyor. 
+//detailed scanner *reread
+The order in which items they are processed by a scanner corresponds to order at which they are loaded into a truck. Scanners accept an item periodically. Since the scanner is processing items in the given interval, there has to be space between items on conveyor based on the speed of the conveyor and the duration of the interval. If many items arrive too soon after each other, they pile up and may cause the conveyor to stop, which should never happen. To prevent stopping of a conveyor, there is a small buffer. The number of items that pile up in the buffer during a daily expedition will be one of the measurements of robustness to delays.
+
+We also simplify our problem and assume that workers at the loading ramp can always pick up an item coming from the scanner. That means that scanners then create bottlenecks for each expedition ramp where throughput is limited by the frequency at which scanner can process items.
+
+
 
 \begin{figure}
 \includegraphics[width=0.8\linewidth]{highbaywarehouse.jpg}
@@ -95,20 +113,16 @@ Properties to consider are prioritization of production handling, limited throug
 \section{Automated warehouse}
 \label{sec:Automated warehouse}
 
-This section describes additional details regarding the warehouse and expedition on top of the description in \ref{subsec:Description} to be able to state scheduling problem properly.
+This section describes additional details regarding the warehouse and expedition on top of the description in Section \ref{subsec:Description} to be able to state scheduling problem properly.
 
 \subsection{Additional details of the automated warehouse}
 
 
-Scanners, which are located at the end of every expedition conveyor, accepts an item periodically. Since the scanner is processing items in the given interval, there has to be space between items on conveyor based on the speed of the conveyor and the duration of the interval. If many items arrive too soon after each other, they pile up and may cause the conveyor to stop, which should never happen. To prevent stopping of a conveyor, there is a small buffer. The number of items that pile up in the buffer during a daily expedition will be one of the measurements of robustness to delays.
 
-We also simplify our problem and assume that workers at the loading ramp can always pick up an item coming from the scanner. That means that scanners then create bottlenecks for each expedition ramp where throughput is limited by the frequency at which scanner can process items.
 
 \subsection{Expedition scenario}
 \label{expedition}
-We consider expedition is spanned over a part of one day. During the expedition, a truck can arrive at an expedition ramp at a scheduled time and demand a certain number of items of different types and order of these types in which they should be loaded into the truck for practical reasons. Items are loaded into a truck in order in which they are processed by a scanner. At each ramp, trucks arrive and leave one after each other. After the expedition of a truck is finished, there is reserved time after which the next truck can arrive to correspond more to reality. 
 
-Which specific items will be expedited is known in advance and is expected that these items are distributed uniformly across all aisles.
 
 \subsection{Expectation for a good schedule}
 
@@ -304,16 +318,16 @@ It consists of four different phases.
     \item Re-ordering
 \end{enumerate}
 
-As mentioned in \ref{simplicity}, focusing on the optimality of a schedule rather than simplicity does not perform well in practice. That being said, in the first phase algorithm optimally assign trucks to ramps. In the second phase, however, heuristic construction is used to get a good solution in a relatively short time. In the third phase, we insert idle times in between completion time $c_i$ to achieve good robustness to delays caused by prioritized production handling \cite{pinedo}. The last phase is used to further improve on assignments or insertions, which were made in the second and the third phases using local search techniques.
+As mentioned in \ref{simplicity}, focusing on the optimality of a schedule rather than simplicity does not perform well in practice. That being said, in the first phase algorithm optimally distributes trucks to ramps. In the second phase, however, heuristic construction is used to get a good schedule in a relatively short time. In the third phase, we insert idle times in between completion times $c_i$ to achieve good robustness to delays caused by prioritized production handling \cite{pinedo}. The last phase is used to further improve on assignments or insertions, which were made in the second and the third phases using local search techniques.
 
 \begin{figure}[h]
-\includegraphics[width=0.8\linewidth]{algo.jpg}
+\includegraphics[width=1.0\linewidth]{algo.jpg}
 \caption{Illustration of phases one to three of the algorithm.}
 \end{figure}
 
 \section{Truck allocation}
 
-The goal of this phase is to distribute trucks among expedition ramps so that workers at each ramp work almost the same time and do the same amount of work. In other words, this can be formulated as minimization of makespan. By minimizing the makespan, we achieve a balanced load among expedition ramps which often leads to good utilization of machines or in our cases expedition ramps \cite{pinedo}. 
+The goal of this phase is to distribute trucks among expedition ramps so that workers at each ramp work almost the same time and do nearly the same amount of work. This can be achieve by minimizing the makespan. By minimizing the makespan, we achieve good utilization of machines or in our case expedition ramps, which leads to balanced load on expedition ramps \cite{pinedo}. 
 
  Objective function:
  
@@ -321,9 +335,9 @@ The goal of this phase is to distribute trucks among expedition ramps so that wo
      \min(\max(ct_0, ct_1, \ldots, ct_n))
  \end{equation}
 
-In many factories as well as in the automated warehouse, there are not many scheduled trucks in a day (under 50). On top of that, its objective and problem description is very simple. This makes this problem a good example where CP or LP is effective. Even for it being a real-world problem, finding the optimal solution for this case is valuable since stochastic events like "need to reschedule a truck to different ramp" or "truck needs more or fewer items than it originally demanded" do not occur very often.
+In many factories as well as in the automated warehouse, there are not many trucks scheduled for a single day (under 50). On top of that, truck allocation problem has very simple objective and constraints. This makes this problem a good example where CP or LP performs well. Even for it being a real-world problem, finding the optimal solution for this case is valuable since stochastic events like "need to reschedule a truck to different ramp" or "truck needs more or fewer items than it originally demanded" do not occur very often.
 
-This problem of distributing trucks among ramps can be formulated as an LP or CP problem as follows:\\
+This problem of distributing trucks among ramps can be formulated as CP problem as follows:\\
 
 \noindent \textbf{Decision variables}
 
@@ -376,7 +390,7 @@ Since the duration of the truck expedition is unknown, we approximate its durati
     \end{equation}
 \end{itemize}
 
-To improve the performance of these methods we need to select \textbf{upper bound} of the objective and variables. Upper bound is calculated using LPT heuristics mentioned in chapter \ref{chap:Related work}.
+To improve the performance of these methods we need to select \textbf{upper bound} of the objective and variables. Upper bound is calculated using LPT heuristics mentioned in Chapter \ref{chap:Related work}.
 
 
 *In the CP approach, LPT heuristics can also be used for the ordering of variables. This way the algorithm redistributes trucks with lower load first, which can lead to uniformly distributed workload faster.
@@ -482,8 +496,12 @@ TBD
 
 Idle times should be distributed uniformly to prevent buffer overflow too, but some items can benefit more from idle times (last item of its type).  Assign weights to each item (bigger weight, more likely to increase idle time). I propose distributing remaining time uniformly. Try to distribute remaining time, if the schedule is too long, try remaining time / 2, etc. until the remaining time is < something. After that, we can run simulated annealing to distribute the rest.
 
-\section{Meta-heuristics}
-Above is also local search, maybe merge?.
+Simulated annealing applies the first move that improves or does not change a score. The set of moves that is proposed is *... and order at which moves are consider is based on weight of an item and length of already assigned idle time. 
+
+*formula
+
+\section{Re-ordering}
+*Above is also local search, maybe merge?.
 
 Another improvement is using tabu search which swaps order number of two items. Some objectives are not easily minimized using some heuristics in step 2 like for example weighted penalty for scheduling two jobs right after each other on a single machine because it can lead to stopping a production
 
