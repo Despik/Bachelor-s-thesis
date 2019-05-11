@@ -64,7 +64,7 @@ Since the beginning of research in scheduling, many methods and approaches were 
 In this thesis, general methods for solving scheduling problems relevant to scheduling a daily expedition of the given automated warehouse configuration are discussed. Then, method and an objective of a schedule for the given automated warehouse and scenario is proposed. Finally, proposed method is implemented and evaluated based on results from the provided simulation tool. 
 
 \section{The automated warehouse}
-
+\label{sec:wh}
 There are many different types of automated warehouses with very different requirements, structures, and functionality. The problem of scheduling an expedition can be very different based on the structure and the type of an automated warehouse. The basic structure and functionality of an automated warehouse based on a real-world problem were provided for this thesis and can be described as follows.
 
 \subsection{Description}
@@ -91,6 +91,9 @@ The order in which items they are processed by a scanner corresponds to order at
 
 We also simplify our problem and assume that workers at the loading ramp can always pick up an item coming from the scanner. That means that scanners then create bottlenecks for each expedition ramp where throughput is limited by the frequency at which scanner can process items.
 
+\subsubsection{Available information}
+
+Several basic parameters were provided for the given automated warehouse. These parameters include horizontal and vertical speeds and accelerations of stacker cranes, dimensions of a warehouse, speed and length of conveyors, duration of scanning an item, duration of grabbing an item from a conveyor, duration of putting an item on a conveyor and exact location of each item stored in the warehouse. For the expedition, we know count, types, and order at which items should be loaded for each truck. 
 
 
 \begin{figure}
@@ -99,41 +102,15 @@ We also simplify our problem and assume that workers at the loading ramp can alw
 \label{fig:foobar}
 \end{figure}
 
-\section{Motivation}
+\section{Goals and motivation}
 
-The goal of this thesis is to be able to create an appropriate schedule in a reasonable time for the given automated warehouse and integrate this schedule to provided simulation tool so that the created schedule can be observed in action and evaluated based on it. With a combination of the schedule and the simulation tool, we are also able to get data about the capabilities of the warehouse itself, which is valuable information when designing an automated warehouse. Integration of the scheduler to the simulation tool also enriches the simulation tool and can be used in future projects.
-
-Properties to consider are prioritization of production handling, limited throughput, and robustness to failure of individual robots. 
+The goal of this thesis is to create a schedule in reasonable time by assigning trucks planned for a day to expedition ramps, determining their order, determining order at which items will be expedited and finally determine specific time at which stacker cranes should start unloading each item. Since there is no information about item production, we cannot incorporate production handling in our schedule, but knowing that production handling can delay unloading of an item, we can try to minimize effect that production handling has on the schedule. How much production handling affects the schedule and if or how much are some of the requirements from Section \ref{sec:wh}, like preventing a buffer from filling up, violated sets how good the schedule is. To properly evaluate the schedule, it has to be integrated to provided simulation tool so that the created schedule can be observed in action and evaluated based on it. With a combination of the schedule and the simulation tool, we are also able to get data about the capabilities of the warehouse itself, which is valuable information when designing an automated warehouse. Integration of the scheduler to the simulation tool also enriches the simulation tool and can be used in future projects.
 
 \section{Structure of this thesis}
 
 
 
 \chapter{Problem statement}
-\section{Automated warehouse}
-\label{sec:Automated warehouse}
-
-This section describes additional details regarding the warehouse and expedition on top of the description in Section \ref{subsec:Description} to be able to state scheduling problem properly.
-
-\subsection{Additional details of the automated warehouse}
-
-
-
-
-\subsection{Expedition scenario}
-\label{expedition}
-
-
-\subsection{Expectation for a good schedule}
-
-When a good schedule is used in the real world (or in our case the simulation tool), it is expected that it performs as expected and differences between the schedule and reality are minimal. Additionally, it should also try to satisfy all expedition requirements mentioned in sections \ref{expedition}.
-
-\subsection{Available information}
-
-Several basic parameters were provided for the given automated warehouse. These parameters include horizontal and vertical speeds and accelerations of stacker cranes, dimensions of a warehouse, speed and length of conveyors, duration of scanning an item, duration of grabbing an item from a conveyor, duration of putting an item on a conveyor and exact location of each item stored in the warehouse. For the expedition, we know count, types, and order at which items should be loaded for each truck. 
-
-From these parameters, we can obtain data needed for describing machine scheduling model.
-
 
 \section{Notation and terminology}
 in progress\\
