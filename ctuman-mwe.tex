@@ -83,13 +83,16 @@ Stacker cranes operate automatically and can either store an item from productio
 If stacker crane is requested to unload an item, it moves to the position of an item, grabs it and moves to the beginning of an aisle, where it puts the item on the conveyor leading to a expedition ramp. In case of an item arriving from production to an aisle's production buffer. Stacker crane should retrieve this item from the production buffer and store in a free position in the aisle. If any production buffer overflows, production would have to be stopped, for that reason, stacker cranes prioritize storing of an item over unloading. It means that as soon as a stacker crane finishes an operation in progress, it stores an item from production even if it means delaying scheduled unloadings.
 
 \subsubsection{Daily expedition}
-Expedition is spanned over a part of one day. During the expedition, a truck can arrive at an expedition ramp at a scheduled time. Only one truck and be loaded at a time at each expedition ramp. There is also reserved time after which the next truck can arrive. Every truck requests a certain number of items of different types and order of these types in which they should be loaded into the truck for practical reasons. Which specific items will be expedited is known in advance and is expected that these items are distributed uniformly across all aisles. 
+Expedition is spanned over a part of one day. It is set when the working hours start and end. During the expedition, a truck can arrive at an expedition ramp at a scheduled time. Only one truck and be loaded at a time at each expedition ramp. There is also reserved time after which the next truck can arrive. Every truck requests a certain number of items of different types and order of these types in which they should be loaded into the truck for practical reasons. Which specific items will be expedited is known in advance and is expected that these items are distributed uniformly across all aisles. 
 
 Before each item reaches an expedition ramp, it needs to be processed by a scanner, which is located at the end of the conveyor. 
 //detailed scanner *reread
-The order in which items they are processed by a scanner corresponds to order at which they are loaded into a truck. Scanners accept an item periodically. Since the scanner is processing items in the given interval, there has to be space between items on conveyor based on the speed of the conveyor and the duration of the interval. If many items arrive too soon after each other, they pile up and may cause the conveyor to stop, which should never happen. To prevent stopping of a conveyor, there is a small buffer. The number of items that pile up in the buffer during a daily expedition will be one of the measurements of robustness to delays.
+The order in which items they are processed by a scanner corresponds to order at which they are loaded into a truck. Scanners accept an item periodically. Since the scanner is processing items in the given interval, there has to be space between items on conveyor based on the speed of the conveyor and the duration of the interval. If many items arrive too soon after each other, they pile up and may cause the conveyor to stop, which should never happen. To prevent stopping of a conveyor, there is a small buffer. Scanner also accepts an item as soon as possible. The number of items that pile up in the buffer during a daily expedition will be one of the measurements of robustness to delays.
 
 We also simplify our problem and assume that workers at the loading ramp can always pick up an item coming from the scanner. That means that scanners then create bottlenecks for each expedition ramp where throughput is limited by the frequency at which scanner can process items.
+
+
+On top of all these specifications, it is expected that the expedition should not last longer than the working hours, but it also should not end too soon. Additionally, the duration of a truck expedition should not take too much time. These parameters and importance of these requests is something that client should specify and it has to be considered during a construction of a schedule.
 
 \subsubsection{Available information}
 
@@ -154,20 +157,67 @@ in progress\\
 
 \section{Scheduling problem}
  
- The problem of expedition scheduling in the automated warehouse can be separated into two problems. The first problem is dealing assignment of ramps to trucks and order of trucks at which they arrive. The second problem occurs after the first problem, and it deals with the assignment of completion times to jobs only since machines are predetermined. This thesis mostly tackles the second problem since a good solution to the first problem is fairly easy to get as is shown in chapter \ref{ch:Proposed solution} and scheduling of the second problem has a greater effect on the overall quality of the schedule.
+ The problem of expedition scheduling in the automated warehouse can be separated into two problems, trucks allocation and item dispatching. The first problem of truck allocation is dealing with assignment of ramps to trucks.
  
- \subsection{Scheduling trucks}
+ The second problem, item dispatching, occurs after the truck allocation, and it deals with determining which items should meet which requests from trucks and the assignment of completion times of item unloading since machines are predetermined (see Section \ref{sec:wh}).
  
- We will formulate this problem as a parallel machine model.
+Both of these problems are described as machine models in following sections, which are used in scheduling literature (See \cite{pinedo} or \cite{bucker} for overview of machine models). More formal formulations for both of these problems are included.
  
- There are $m$ ramps in parallel and $n$ trucks planned for a day. Ramps can be interpreted as machines in parallel and jobs as the whole expedition of each truck. Since each ramp includes only one scanner, which acts as a bottleneck in the warehouse, the objective of this problem is to distribute expedition among ramps uniformly to utilize these ramps. In other words, workers at each expedition ramp should ideally work the same hours and do the same amount of work.
+ \subsection{Trucks allocation}
+ \label{subsec:truckallocation}
+This problem can be formulated as a parallel machine model.
  
-\subsection{Expedition in the automated warehouse as machine scheduling model}
+ There are $r$ ramps in parallel and $t$ trucks planned for a day. Ramps can be interpreted as machines in parallel and jobs as the whole expedition of each truck. Since each ramp includes only one scanner, which acts as a bottleneck in the warehouse, the objective of this problem is to distribute expedition among ramps uniformly to utilize these ramps. In other words, workers at each expedition ramp should ideally work the same hours and do the same amount of work.
+ 
+ The problem can be formulated as assignment problem as follows:
+ 
+ \begin{equation}\label{eq:to}
+\begin{aligned}
+&\text{minimize}
+&&\max(y_0, \ldots, y_r)
+\end{aligned}
+\end{equation}
+\text{subject to}\\
+\begin{equation} \label{eq:ta1}
+\begin{aligned}
+    & \sum_{i=0}^{n} x_{ij} = 1 && \text{for } j=0, \ldots, r\\
+\end{aligned}
+\end{equation}
+\begin{equation} \label{eq:ta2}
+\begin{aligned}
+    & \sum_{i=0}^{t} {d_i} \cdot x_{ij} = y_j && \text{for } j=0, \ldots, r
+\end{aligned}
+\end{equation}
+  
+Where $x_{ij}$ is a binary decision variable, which detonates the $i$th truck is scheduled on $j$th expedition ramp. By satisfying Equation \ref{eq:ta1} it is ensured that every truck is assigned to only one ramp. Equation \ref{eq:ta2} sets variable $y_i$ to duration of expedition on the expedition ramp $i$. By minimizing Function \ref{eq:to} we minimize makespan, which leads the uniform utilization of machines \cite{pinedo}.
+ 
+\subsection{Item dispatching}
+\label{itemdispatching}
+The problem of assigning completion times to jobs in the automated warehouse can be formulated as a special case of 2-stage flexible flow shop (FF2) with blocking or flexible flow line (FFL) with two stages as follows (See \cite{pinedo} for more information about these models):
 
-The problem of assigning completion times to jobs in the automated warehouse can be formulated as a special case of 2-stage flexible flow shop (FF2) with blocking or flexible flow line (FFL) with two stages as follows:
+There are two work stations connected in series. The first work stations consist of $m$ machines (stacker cranes) in parallel and the second work station consists of $r$ machines (scanners) also in parallel. Every job $job_i$ needs to be processed on its predetermined machine and processing of $job_i$ takes $p_i$ seconds. After job $job_i$ is processed, it travels $t_i$ seconds to get to a scanner where it needs to be processed too. Processing time $s$ of every scanner is the same. Jobs cannot wait between work stations. That alone is referred to as FFL.
 
-There are two work stations connected in series. The first work stations consist of $m$ machines (stacker cranes) in parallel and the second work station consists of $l$ machines (scanners) also in parallel. Every job $job_i$ needs to be processed on its predetermined machine. After job $job_i$ is processed, it travels to a scanner where it needs to be processed too. Jobs cannot wait between work stations, and machines need to start processing a job as soon as it arrives. That alone is referred to as FFL.
+For convenience we formulate this problem as constraint satisfaction problem as follows:
 
+\textbf{Variables:}
+\begin{align}
+    &V = \{c_{0}, c_{1}, \ldots, c_{n},r_0, \ldots, r_m, pos_0, \ldots, pos_n\}
+\end{align}
+\textbf{Domains:}
+\begin{align}
+&c_{i} \in C_i = \{start, ..., end\} && \text{for } i=0,\ldots,n\\
+&r_{i} \in R && \text{for } i=0,\ldots,n\\
+&pos_i \in P_i
+\end{align}
+\textbf{Constraints:}
+ \begin{align}
+& pos_i < pos_j \iff c_i < c_j && \text{for } i=0,\ldots,n\\ \label{eq:idcons2}
+& m_i = m_j \implies scc_i \leq scs_j \lor scc_j \leq scs_i && \text{for } i,j=0,\ldots,n\\ \label{eq:idcons1}
+& r_i = r_j \implies c_i  + \theta_i \leq s_j \lor c_j + \theta_j \leq s_i && \text{for } i,j=0,\ldots,n\\ \label{eq:idcons4}
+\end{align}
+
+Where constraint \ref{eq:idcons2} ensures that a variable $pos_i$ represent an order at which an item $i$ is loaded. Constraints \ref{eq:idcons1} and \ref{eq:idcons4} secures that stacker cranes and scanners can process only one item at a time.
+  
 Alternatively, we can formulate this problem (with single expedition ramp) as a linear program, as follows:\\
 \textbf{Decision variables}
 
@@ -249,7 +299,7 @@ Methods for solving various forms of scheduling problems were extensively studie
 
 \section{Overview of methods and approaches for finding optimal or nearly optimal schedule}
 
-Both problems we consider in this thesis are NP-hard \cite{complexity} and finding an optimal solution is not an easy task. For finding the optimal schedule, seemingly two general methods are used, Linear Integer Programming (LP) and Constraint Programming (CP) with a combination of pruning methods, an approximation of initial bounds and other general methods. LP approach is often obsolete for real-world problems, where there are hundreds or thousands jobs to schedule. CP is in many cases similar to LP, but offers better flexibility for designing constraints and can be optimized for specific problems and because of it it often outperforms LP.
+Both problems we consider in this thesis are NP-hard \cite{complexity}. To find the optimal schedule, seemingly two general methods are used, Linear Integer Programming (LP) and Constraint Programming (CP) with a combination of pruning methods, an approximation of initial bounds and other general methods. LP approach is often obsolete for real-world problems, where there are hundreds or thousands jobs to schedule. CP is in many cases similar to LP, but offers better flexibility for designing constraints and can be optimized for specific problems and because of it it often outperforms LP.
 
 *I will describe CP here
 
@@ -295,7 +345,7 @@ It consists of four different phases.
     \item Re-ordering
 \end{enumerate}
 
-As mentioned in \ref{simplicity}, focusing on the optimality of a schedule rather than simplicity does not perform well in practice. That being said, in the first phase algorithm optimally distributes trucks to ramps. In the second phase, however, heuristic construction is used to get a good schedule in a relatively short time. In the third phase, we insert idle times in between completion times $c_i$ to achieve good robustness to delays caused by prioritized production handling \cite{pinedo}. The last phase is used to further improve on assignments or insertions, which were made in the second and the third phases using local search techniques.
+As mentioned in \ref{simplicity}, focusing on the optimality of a schedule rather than simplicity does not perform well in practice. That being said, in the first phase algorithm optimally distributes trucks to ramps and thus solves the problem of truck allocation (Subsection \ref{subsec:truckallocation}). In the second phase, however, heuristic construction is used to get a good schedule by solving job dispatching problem (Subsection \ref{subsec:itemdispatching}) in a relatively short time. In the third phase, we insert idle times in between completion times $c_i$ to achieve good robustness to delays caused by prioritized production handling \cite{pinedo}. The last phase is used to further improve on assignments or insertions, which were made in the second and the third phases using local search techniques.
 
 \begin{figure}[h]
 \includegraphics[width=1.0\linewidth]{algo.jpg}
@@ -304,78 +354,19 @@ As mentioned in \ref{simplicity}, focusing on the optimality of a schedule rathe
 
 \section{Truck allocation}
 
-The goal of this phase is to distribute trucks among expedition ramps so that workers at each ramp work almost the same time and do nearly the same amount of work. This can be achieve by minimizing the makespan. By minimizing the makespan, we achieve good utilization of machines or in our case expedition ramps, which leads to balanced load on expedition ramps \cite{pinedo}. 
+As said in Subsection \ref{subsec:truckallocation}, the goal of this phase is to distribute trucks among expedition ramps so that workers at each ramp work almost the same time and do nearly the same amount of work. This can be achieve by minimizing the makespan. By minimizing the makespan, we achieve good utilization of machines or in our case expedition ramps, which leads to balanced load on expedition ramps \cite{pinedo}. 
 
- Objective function:
- 
- \begin{equation}
-     \min(\max(ct_0, ct_1, \ldots, ct_n))
- \end{equation}
+In many factories as well as in the automated warehouse, there are not many trucks scheduled for a single day (under 50). On top of that, truck allocation problem (\ref{subsec:truckallocation}) has very simple objective and constraints. This makes this problem a good example where CP or LP performs well. Even for it being a real-world problem, finding the optimal solution for this case is valuable since stochastic events like "need to reschedule a truck to different ramp" or "truck needs more or fewer items than it originally demanded" do not occur very often.
 
-In many factories as well as in the automated warehouse, there are not many trucks scheduled for a single day (under 50). On top of that, truck allocation problem has very simple objective and constraints. This makes this problem a good example where CP or LP performs well. Even for it being a real-world problem, finding the optimal solution for this case is valuable since stochastic events like "need to reschedule a truck to different ramp" or "truck needs more or fewer items than it originally demanded" do not occur very often.
+This problem was already formulated as assignment problem in Subsection \ref{subsec:truckallocation}, which can be solved using CP or LP method.
 
-This problem of distributing trucks among ramps can be formulated as CP problem as follows:\\
-
-\noindent \textbf{Decision variables}
-
-\begin{itemize}
-\item $x_{ij}$: 1 if truck $i$ is assigned to ramp $j$, 0 otherwise
-\item$ct_i$: completion time of expedition on a ramp $i$
-\end{itemize}
-\textbf{Data}
-\begin{itemize}
-\item$d_i$: approximation of expedition duration of a truck $i$
-\end{itemize}
-
-Since the duration of the truck expedition is unknown, we approximate its duration using average processing times $\overline{p}$ as follows:
-
-\begin{equation}
-     duration = quantity \cdot \overline{p} + reserve
-\end{equation}
-
-\subsubsection{CP model}
-
-\begin{itemize}
-    \item Variables:\\
-    \begin{equation}
-        x_{00}, x_{01}, \ldots, x_{0r}, \ldots, x_{nm}
-    \end{equation}
-    \begin{equation}
-        ct_0, \ldots, ct_m
-    \end{equation}
-    \item Domains\\
-    \begin{equation}
-    x_{ij} \in \{0, 1\}
-    \end{equation}
-    \begin{equation}
-    ct_{i} \in \{start+  d_i, start + d_i + step, \ldots, start + upperBound\}
-    \end{equation}
-    \item Constraints
-    \begin{equation}
-    \begin{aligned}
-    & \sum_{i=0}^{n} x_{ij} = 1 &&\\
-    & d_0x_{0j} + d_1x_{1j} + \ldots + d_nx_{nj} = ct_j && \text{for}\; j = 1, \ldots, m\\
-    \end{aligned}
-    \end{equation}
-    \item Objective function\\
-    \begin{equation}
-        makespan = \max(ct_0, ct_1, \ldots, ct_m)
-    \end{equation}
-    \item Goal\\
-    \begin{equation}
-        \min(makespan)
-    \end{equation}
-\end{itemize}
-
-To improve the performance of these methods we need to select \textbf{upper bound} of the objective and variables. Upper bound is calculated using LPT heuristics mentioned in Chapter \ref{chap:Related work}.
-
+To improve the performance of these methods we need to select \textbf{upper bound} of the objective and variables. Upper bound is calculated using LPT heuristics mentioned in Chapter \ref{chap:Related work}. LPT heuristics can be also used as an alternative to CP or LP solution in cases where 
 
 *In the CP approach, LPT heuristics can also be used for the ordering of variables. This way the algorithm redistributes trucks with lower load first, which can lead to uniformly distributed workload faster.
 
-
 \section{Job dispatching}
 
-At this phase, we need to assign a completion time, and an expedition ramp to an item from the warehouse. Assigning a ramp and a completion time to all items results in a completed schedule for warehouse expedition. 
+At this phase, we need to determine which item will be handling what request and then assign a completion times (or start times) of processing of these requests.*
 
 To be able to tell what is a feasible schedule and further describe this algorithm, we formulate this problem as a CSP. 
 
@@ -408,15 +399,7 @@ To be able to tell what is a feasible schedule and further describe this algorit
 *correctPosition
 
 Constraint $noOverlap$ prevents machines, conveyors and scanners to process more than one item at a time. Schedule is feasible if function $noOverlap$ is $True$ for every pair $i$,$j$.
-\label{overlap}
-\begin{algorithm}
-\SetAlgoLined
-\SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
-\Input{$c_i$ - completion time of an item $i$, $c_j$ - completion time of an item $j$, $r_i$ ramp to which item $i$ is assigned, $r_j$ ramp to which an item $j$ is assigned\\}
-\Output{$True$ - Process of unloading items $i$ and $j$ does not overlap, $False$ - Process of unloading items $i$ and $j$ overlaps either at stacker crane, scanner or a conveyor}
-$TBD$
- \caption{Constraint - noOverlap}
-\end{algorithm}
+
 
 The goal of this phase is to create a feasible schedule. To obtain it, a constructive heuristic method is proposed. This method assigns values to variables in a way that after assigning value to every variable, we get a feasible solution without a need to backtrack.
 
@@ -510,5 +493,39 @@ Complexity and Computations}, Nijhoff, The Hague (as cited in \cite{pinedo})
 
 \end{thebibliography}
 
+***
+The order at which trucks arrive at the expedition ramp is determined by priority of a truck. A truck with higher priority is scheduled before a truck with lower priority on the same expedition ramp. If a truck is delayed, it affects trucks scheduled after it and it creates cascading effect, where all trucks behind the first delayed one are delayed if reserve time between them is not big enough. 
+
+
+\label{overlap}
+\begin{algorithm}[H]
+\SetAlgoLined
+\SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+\Input{$c_i$ - completion time of an item $i$, $c_j$ - completion time of an item $j$, $r_i$ ramp to which item $i$ is assigned, $r_j$ ramp to which an item $j$ is assigned\\}
+\Output{$1$ - Process of unloading items $i$ and $j$ does not overlap, $0$ - Process of unloading items $i$ and $j$ overlaps either at stacker crane, scanner or a conveyor}
+
+$s_i = c_i - s\;$\\
+$s_j = c_j - s\;$\\
+$scc_i = s_i - t_{r_i}\;$\\
+$scc_j = s_j - t_{r_j}\;$\\
+
+$scs_i = scc_i - p_i\;$\\
+$scs_j = scc_j - p_j\;$
+
+\If{$m_i = m_j$}{
+    \If{$scc_i > scs_j \land scc_j > scs_i$}{
+        return $0\;$ \tcc{Processing of an items $i$ and $j$ is overlapping at stacker crane $m_i$}
+    }
+}
+
+\If{$r_i = r_j$}{
+    \If{$c_i  + \theta_i > s_j \land c_j + \theta_j > s_i$}{
+        return $0\;$ \tcc{Processing of an items $i$ and $j$ is overlapping at expedition ramp $r_i$}
+    }
+}
+
+return $1\;$
+ \caption{Constraint - noOverlap}
+\end{algorithm}
 \end{document}
 
