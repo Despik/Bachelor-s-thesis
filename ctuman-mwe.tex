@@ -190,12 +190,14 @@ This problem can be formulated as a parallel machine model.
 \end{equation}
   
 Where $x_{ij}$ is a binary decision variable, which detonates the $i$th truck is scheduled on $j$th expedition ramp. By satisfying Equation \ref{eq:ta1} it is ensured that every truck is assigned to only one ramp. Equation \ref{eq:ta2} sets variable $y_i$ to duration of expedition on the expedition ramp $i$. By minimizing Function \ref{eq:to} we minimize makespan, which leads the uniform utilization of machines \cite{pinedo}.
+
+There are no requirements or constraints regarding to order at which trucks should arrive at each ramp.
  
 \subsection{Item dispatching}
 \label{itemdispatching}
 The problem of assigning completion times to jobs in the automated warehouse can be formulated as a special case of 2-stage flexible flow shop (FF2) with blocking or flexible flow line (FFL) with two stages as follows (See \cite{pinedo} for more information about these models):
 
-There are two work stations connected in series. The first work stations consist of $m$ machines (stacker cranes) in parallel and the second work station consists of $r$ machines (scanners) also in parallel. Every job $job_i$ needs to be processed on its predetermined machine and processing of $job_i$ takes $p_i$ seconds. After job $job_i$ is processed, it travels $t_i$ seconds to get to a scanner where it needs to be processed too. Processing time $s$ of every scanner is the same. Jobs cannot wait between work stations. That alone is referred to as FFL.
+There are two work stations connected in series. The first work stations consist of $m$ machines (stacker cranes) in parallel and the second work station consists of $r$ machines (scanners) also in parallel. Every job $job_i$ needs to be processed on its predetermined machine and processing of $job_i$ takes $p_i$ seconds. After job $job_i$ is processed, it travels $t_i$ seconds to get to a scanner where it needs to be processed too. Processing time $s$ of every scanner is the same. Jobs cannot wait between work stations. That alone is referred to as FFL. Additionally we need to ensure that an item $i$ arrives to a truck in an order at which this item's type is requested and since this problems follows the truck allocation problem, orders at which items should arrive at expedition ramp are known.
 
 For convenience we formulate this problem as constraint satisfaction problem as follows:
 
@@ -207,16 +209,18 @@ For convenience we formulate this problem as constraint satisfaction problem as 
 \begin{align}
 &c_{i} \in C_i = \{start, ..., end\} && \text{for } i=0,\ldots,n\\
 &r_{i} \in R && \text{for } i=0,\ldots,n\\
-&pos_i \in P_i
+&pos_i \in \{1, \ldots, n\}
 \end{align}
 \textbf{Constraints:}
  \begin{align}
-& pos_i < pos_j \iff c_i < c_j && \text{for } i=0,\ldots,n\\ \label{eq:idcons2}
+& pos_i < size_{r_i} && \text{for } i=0,\ldots,n \nonumber \\
+& pos_i < pos_j \land r_i = r_j \implies c_i < c_j && \text{for } i=0,\ldots,n\\ \label{eq:idcons2}
 & m_i = m_j \implies scc_i \leq scs_j \lor scc_j \leq scs_i && \text{for } i,j=0,\ldots,n\\ \label{eq:idcons1}
 & r_i = r_j \implies c_i  + \theta_i \leq s_j \lor c_j + \theta_j \leq s_i && \text{for } i,j=0,\ldots,n\\ \label{eq:idcons4}
+& expedition_{pos_i,r_i} = type_i  && \text{for } i=0,\ldots,n\\ \label{eq:idcons3}
 \end{align}
 
-Where constraint \ref{eq:idcons2} ensures that a variable $pos_i$ represent an order at which an item $i$ is loaded. Constraints \ref{eq:idcons1} and \ref{eq:idcons4} secures that stacker cranes and scanners can process only one item at a time.
+Where constraint \ref{eq:idcons2} ensures that a variable $pos_i$ represent an order at which an item $i$ is loaded at expedition ramp $r_i$. Constraints \ref{eq:idcons1} and \ref{eq:idcons4} secures that stacker cranes and scanners can process only one item at a time respectively. Finally, Constraint \ref{eq:idcons3} checks if type of an item $i$ is expected at expedition ramp $r_i$ in $pos_i$-th order.
   
 Alternatively, we can formulate this problem (with single expedition ramp) as a linear program, as follows:\\
 \textbf{Decision variables}
@@ -356,7 +360,7 @@ As mentioned in \ref{simplicity}, focusing on the optimality of a schedule rathe
 
 As said in Subsection \ref{subsec:truckallocation}, the goal of this phase is to distribute trucks among expedition ramps so that workers at each ramp work almost the same time and do nearly the same amount of work. This can be achieve by minimizing the makespan. By minimizing the makespan, we achieve good utilization of machines or in our case expedition ramps, which leads to balanced load on expedition ramps \cite{pinedo}. 
 
-In many factories as well as in the automated warehouse, there are not many trucks scheduled for a single day (under 50). On top of that, truck allocation problem (\ref{subsec:truckallocation}) has very simple objective and constraints. This makes this problem a good example where CP or LP performs well. Even for it being a real-world problem, finding the optimal solution for this case is valuable since stochastic events like "need to reschedule a truck to different ramp" or "truck needs more or fewer items than it originally demanded" do not occur very often.
+In many factories as well as in the automated warehouse, there are not many trucks scheduled for a single day (under 50). On top of that,  problem (\ref{subsec:truckallocation}) has very simple objective and constraints. This makes this problem a good example where CP or LP performs well. Even for it being a real-world problem, finding the optimal solution for this case is valuable since stochastic events like "need to reschedule a truck to different ramp" or "truck needs more or fewer items than it originally demanded" do not occur very often.
 
 This problem was already formulated as assignment problem in Subsection \ref{subsec:truckallocation}, which can be solved using CP or LP method.
 
@@ -366,7 +370,7 @@ To improve the performance of these methods we need to select \textbf{upper boun
 
 \section{Job dispatching}
 
-At this phase, we need to determine which item will be handling what request and then assign a completion times (or start times) of processing of these requests.*
+At this phase, we need to determine which ramp a completion times (or start times) of processing of these requests.*
 
 To be able to tell what is a feasible schedule and further describe this algorithm, we formulate this problem as a CSP. 
 
