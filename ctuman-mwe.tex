@@ -85,7 +85,7 @@ If stacker crane is requested to unload an item, it moves to the position of an 
 Expedition is spanned over a part of one day. It is set when the working hours start and end. During the expedition, a truck can arrive at an expedition ramp at a scheduled time. Only one truck and be loaded at a time at each expedition ramp. There is also reserved time after which the next truck can arrive. Every truck requests a certain number of items of different types and order of these types in which they should be loaded into the truck for practical reasons. Which specific items will be expedited is known in advance and is expected that these items are distributed uniformly across all aisles. 
 
 Before each item reaches an expedition ramp, it arrives to a conveyor junction and then proceeds to the expedition ramp's scanner, where it needs to be scanned. Scanner is located at the end of the conveyor before each expedition ramp. 
-//detailed scanner *reread
+
 The order in which items they are processed by a scanner corresponds to order at which they are loaded into a truck. Scanners accept an item periodically. Since the scanner is processing items in the given interval, there has to be space between items on conveyor based on the speed of the conveyor and the duration of the interval. If many items arrive too soon after each other, they pile up and may cause the conveyor to stop, which should never happen. To prevent stopping of a conveyor, there is a small buffer. Scanner also accepts an item as soon as possible. The number of items that pile up in the buffer during a daily expedition will be one of the measurements of robustness to delays.
 
 We also simplify our problem and assume that workers at the loading ramp can always pick up an item coming from the scanner. That means that scanners then create bottlenecks for each expedition ramp where throughput is limited by the frequency at which scanner can process items.
@@ -193,8 +193,8 @@ This problem can be formulated as a parallel machine model.
 Where $x_{ij}$ is a binary decision variable, which detonates the $i$th truck is scheduled on $j$th expedition ramp. By satisfying Equation \ref{eq:ta1} it is ensured that every truck is assigned to only one ramp. Equation \ref{eq:ta2} sets variable $y_i$ to duration of expedition on the expedition ramp $i$. By minimizing Function \ref{eq:to} we minimize makespan, which leads the uniform utilization of machines \cite{pinedo}.
 
  
-\subsection{Item dispatching}
-\label{itemdispatching}
+\subsection{Item dispatching}*prejmenovat na expedition dispatching, uz pouzivam nazev job dispatching jako cast algoritmu co tohle resi
+\label{subsec:expeditiondispatching}
 
 The problem of assigning completion times to jobs in the automated warehouse can be formulated as a special case of 2-stage flexible flow shop (FF2) with blocking or flexible flow line (FFL) with two stages as follows (See \cite{pinedo} for more information about these models):
 
@@ -210,7 +210,7 @@ For convenience we formulate this problem as constraint satisfaction problem as 
 \end{align}
 \textbf{Domains:}
 \begin{align}
-&c_{i} \in C_i = \{start, ..., end\} && \text{for } i=0,\ldots,n\\
+&c_{i} \in C_i = \{start, ..., 86400\} && \text{for } i=0,\ldots,n\\
 &r_{i} \in R && \text{for } i=0,\ldots,n\\
 &pos_i \in \{1, \ldots, n\}
 \end{align}
@@ -225,80 +225,9 @@ For convenience we formulate this problem as constraint satisfaction problem as 
 
 Where constraint \ref{eq:idcons2} ensures that a variable $pos_i$ represent an order at which an item $i$ is loaded at expedition ramp $r_i$. Constraints \ref{eq:idcons1} and \ref{eq:idcons4} secures that stacker cranes and scanners can process only one item at a time respectively. Finally, Constraint \ref{eq:idcons3} checks if type of an item $i$ is expected at expedition ramp $r_i$ in $pos_i$-th order.
 
-Alternatively, we can formulate this problem (with single expedition ramp) as a linear program, as follows:\\
-\textbf{Decision variables}
-
-\begin{itemize}
-\item $x_{ij}$: 1 if $job_i$ expedited immediately after $job_j$, 0 otherwise
-\item$c_i$: completion time of $job_i$ on the second stage
-\item$idle_i$: idle time followed after $job_i$ on the second stage
-\item$y_i$: order number of $job_i$ on the second stage
-\item$scc_i$: start time of $job_i$ on the first stage 
-\end{itemize}
-\textbf{Data}
-\begin{itemize}
-\item$p_i$: processing time of $job_i$ on the first stage
-\item$E_i$: set of allowed order numbers on the second stage for $job_i$
-\item$I_i$: set of indexes of jobs scheduled on machine $i$ on the first stage
-\item$M$: represents a large number
-\item$start$: time at which work hours start
-\item$end$: time at which work hours end
-\end{itemize}
-
-\begin{equation}
-\begin{aligned}
-&\text{minimize}
-&&f(\ldots)
-\end{aligned}
-\end{equation}
-\begin{equation}
-\begin{aligned}
-\text{subject to}\\
-& \sum_{i=0}^{n} x_{ij} = 1 &&\\
-& c_{i} - c_{j} + M(1 - x_{ij}) \geq s + idle_{i} && \text{for}\; i,j = 1, \ldots, n\\
-& c_{i} - scc_{i0} = p_{i} + t_i + s + idle_i && \text{for}\; i = 1, \ldots, n\\
-& scc_{i} + p_i < scc_j + M(1 - x_{ij}) && k = 0,\ldots,n, i,j \in I_k\\
-& y_{i} - y_{j} < c_i - c_j + M(1 - x_{ij}) && \text{for}\; i,j = 1, \ldots, n\\
-& y_i \in E_i && \text{for}\; i = 1, \ldots, n\\
-& x_{ij} \in \{0, 1\}  && \text{for}\; i,j = 1, \ldots, n\\ 
-& c_i \geq start && \text{for}\; i = 1, \ldots, n\\
-& c_i \leq end && \text{for}\; i = 1, \ldots, n\\
-& scc_{i} \geq start - p_i && \text{for}\; i = 1, \ldots, n\\
-& idle_i \geq 0 && \text{for}\; i = 1, \ldots, n\\
-\end{aligned}
-\end{equation}
-\\
-
 Main requirements of this problem are to make a schedule that fits into working hours of the warehouse and make the schedule robust to random events. For example, the arrival of an item from production can postpone scheduled job at a machine for a whole duration of storing the item, and that can lead to loading items in the wrong order and filling buffer at a scanner. 
 
-In this thesis, the objective of this problem is described as minimization of the sum of weighted sub-objectives.
 
-Objective:
-
-\begin{equation}
-    score = \alpha T + \beta R + \gamma  U
-\end{equation}
-
-Sub-objectives:
-
-\begin{enumerate}
-\item \textbf{Tardiness} $(T)$\\ \begin{equation}\max(\max_{i=0,\ldots,n}( c_i - end), 0)\end{equation}
-why*
-\item \textbf{Weighted sum of idle times} $(R)$\\ 
-\begin{equation}
-    \sum_{i=0}^{n} w_iidle_i
-\end{equation}
-why*
-\item \textbf{Average flow time of trucks} $(U)$
-\begin{equation} 
-    \dfrac{\sum_{k=0}^{m} \sum_{i \in I_k} c_i}{m}
-\end{equation}
-why*
-\end{enumerate}
-
- These objectives were selected mostly based on reading on objective functions and robustness in \cite{pinedo} and \cite{tkindt}* and experimenting in the simulation tool. 
- 
- Experimenting with these objectives, their effect and trade-off between them are shown in chapter \ref{ch:Evaluation}.
 
 \chapter{Related work}
 \label{chap:Related work}
@@ -348,22 +277,72 @@ It consists of four different phases.
 \begin{enumerate}
     \item Truck allocation
     \item Job dispatching
-    \item Idle time insertion
     \item Re-ordering
+    \item Idle time insertion
 \end{enumerate}
 
-As mentioned in \ref{simplicity}, focusing on the optimality of a schedule rather than simplicity does not perform well in practice. That being said, in the first phase algorithm optimally distributes trucks to ramps and thus solves the problem of truck allocation (Subsection \ref{subsec:truckallocation}). In the second phase, however, heuristic construction is used to get a good schedule by solving job dispatching problem (Subsection \ref{subsec:itemdispatching}) in a relatively short time. In the third phase, we insert idle times in between completion times $c_i$ to achieve good robustness to delays caused by prioritized production handling \cite{pinedo}. The last phase is used to further improve on assignments or insertions, which were made in the second and the third phases using local search techniques.
+As mentioned in \ref{simplicity}, focusing on the optimality of a schedule rather than simplicity does not perform well in practice. That being said, in the first phase algorithm optimally distributes trucks to ramps and thus solves the problem of truck allocation (Subsection \ref{subsec:truckallocation}). In the second phase, however, heuristic construction is used to get a good schedule by solving job dispatching problem (Subsection \ref{subsec:itemdispatching}) in a relatively short time. The third phase is used to further improve on assignments, which were made in the second and the third phases using local search algorithms. In the last phase, we insert idle times in between completion times $c_i$ to achieve good robustness to delays caused by prioritized production handling \cite{pinedo}. 
 
-\begin{figure}[h]
+\begin{figure}[H]
 \includegraphics[width=1.0\linewidth]{algo.jpg}
 \caption{Illustration of phases one to three of the algorithm.}
 \end{figure}
 
+\section{Score of the schedule}
+
+To be able to compare different feasible schedules (See Subsection \ref{subsec:expeditiondispatching}), we introduce a score of a schedule. 
+
+We formulate it as a sum of the weighted sub-objectives. The higher the score is, the better the schedule is.
+
+Score:
+
+\begin{equation}
+\begin{aligned}
+    &score = -\alpha T + \beta R - \gamma  U - \delta S && \alpha, \beta, \gamma, \delta > 0
+\end{aligned}
+\end{equation}
+
+Sub-objectives:
+
+\begin{enumerate}
+\item \textbf{Maximum tardiness} $(T)$\\ \begin{equation}\max_{i=0,\ldots,n}(\max((c_i - end), 0)\end{equation}
+
+The maximum tardiness represents the time by which the last item that arrived to the expedition ramp exceeded work hours. Ideally the value of maximum tardiness is zero, meaning that the whole expedition fits into working hours.
+
+\item \textbf{Sum of idle times} $(R)$\\ 
+\begin{equation}
+    \sum_{i=0}^{n} w_i \cdot idle_i
+\end{equation}
+
+Maximizing the sum of idle times increases robustness of the schedule (See \ref{*}). Because one of the requirements is that items of the same type should be loaded in given order, an expedited item that is followed by an item of a different type may benefit more from idle time. That is why we take weights of idle times into consideration.
+
+\item \textbf{Constraint duration of truck expedition} $(U)$
+\begin{equation} 
+   U = \begin{cases}
+        1 \text{ if } te_i - ts_i > dur_i\\
+        \text{0 otherwise}\\
+       \end{cases}
+\end{equation}
+
+This objective represents penalty for truck expedition which take too much time.
+
+\item \textbf{Standard deviation of idle times} $(S)$
+\begin{equation} 
+    S^2=\frac{1}{n-1}\sum_{i=1}^{n} (idle_{i} -\bar{idle})^2 
+\end{equation}
+
+The goal of this objective is to keep idle times uniformly distributed and make whole expedition robust.
+
+\end{enumerate}
+ 
+ Experimenting with these objectives, weights, their effect and trade-off between them are shown in chapter \ref{ch:Evaluation}.
+
+
 \section{Truck allocation}
 
-In this phase, we solve problem from Subsection \ref{subsec:truckallocation}. The goal of this phase is to distribute trucks among expedition ramps so that workers at each ramp work almost the same time and do nearly the same amount of work. This can be achieve by minimizing the makespan. By minimizing the makespan, we achieve good utilization of machines or in our case expedition ramps, which leads to balanced load on expedition ramps \cite{pinedo}. 
+In this phase, we solve problem from Subsection \ref{subsec:truckallocation}. The goal of this phase is to distribute trucks among expedition ramps so that workers at each ramp work almost the same time and do nearly the same amount of work. This can be achieved by minimizing the makespan. By minimizing the makespan, we achieve good utilization of machines or in our case expedition ramps, which leads to balanced load on expedition ramps \cite{pinedo}. 
 
-In many factories as well as in the automated warehouse, there are not many trucks scheduled for a single day (under 50). On top of that,  problem (\ref{subsec:truckallocation}) has very simple objective and constraints. This makes this problem a good example where CP or LP performs well. Even for it being a real-world problem, finding the optimal solution for this case is valuable since stochastic events like "need to reschedule a truck to different ramp" or "truck needs more or fewer items than it originally demanded" do not occur very often.
+In many factories as well as in the automated warehouse, there are not many trucks scheduled for a single day (under 50). On top of that,  objective of this problem, minimizing a makespan, is a very simple objective. This makes this problem a good example where CP or LP performs well. Even for it being a real-world problem, finding the optimal solution for this case is valuable since stochastic events like "need to reschedule a truck to different ramp" or "truck needs more or fewer items than it originally demanded" do not occur very often.
 
 This problem was already formulated as assignment problem in Subsection \ref{subsec:truckallocation}, which will be used to solved it using CP method.
 
@@ -396,10 +375,10 @@ In this phase, we also need to take into consideration some of the objectives. I
     \ForEach{$i$ in $items$}{
     \If{$m_i = machine$}{
     \ForEach{$time$ in $C_i$}{
-    \If{$S \cup \text{\{i, time, ramp\} is feasible}$}{
+    \If{$S \cup \text{\{i, time, ramp, position\} is feasible}$}{
+    $pos_i \leftarrow$ position\;
     Add \{i, time, ramp\} to solution S\;
     $items \leftarrow items \setminus \{i\}$\;
-    $timeAssigned \leftarrow True$\;
     \textbf{goto} $mainLoopEnd$\;
 }
 }
@@ -408,7 +387,7 @@ In this phase, we also need to take into consideration some of the objectives. I
 }
 [mainLoopEnd]\\
 }
-\caption{Heuristic construction}
+\caption{Job dispatching}
 \end{algorithm}
 
 The algorithm starts by putting items from the warehouse and times from domains $C_i$ to a ordered queue $items$ (See Subsubsection \ref{subsubsec:itemsordering}). Then algorithm selects a $ramp$ and cycles through $machines$ (stacker cranes) in established order until any $machine$ has an item with a same type as a request next in order on a $ramp$. Then it selects the shortest completion time from domain $C_i$ of an unload action of this item, that satisfy constraints from Subsection \ref{subsec:itemdispatching}. 
@@ -431,33 +410,33 @@ Items are order using LPT dispatching rule for reasons stated in Section \ref{ru
 \label{order}
 \end{figure}
 
+\section{Re-ordering}
+
+The goal of this phase of the algorithm is to improve the schedule by reordering items that were ordered using LPT heuristics in the second phase (See Subsubsection \ref{subsubsec:itemsordering}). The heuristics used in the second phase should create a good schedule, but it does not guarantee that the utilization of machines is optimal. This phase tries to bring it closer to the optimum.
+
+The method that is proposed here is a local search algorithm, we compare some of the algorithm in Chapter \ref{ch:Evaluation}. A move of a local search algorithm swaps order from Subsubsection \ref{subsubsec:itemsordering} of two items. After positions are swapped, the job dispatching algorithm must be run again, but items should be now sorted by their assigned position $pos_i$.
+
+The local search algorithm is good alternative to CP approach, or variants of branch and bound, which do not perform well in problems of this scale. The local search ends after set certain amount of time and returns the best schedule that was found. This implies that step of the algorithm is optional and in the worst case we get the schedule from the second phase.
+
+*obrazek
+
 \section{Idle time insertion}
 
-The goal of this phase is to take advantage of the remaining working hours, assuming there is remaining time, spread the expedition through the whole day and as a result create a more robust schedule. 
+The goal of this phase is to take advantage of the remaining time of working hours, assuming there is remaining time, spread the expedition through the whole day and as a result create a more robust schedule. 
 
 Since order at which items are expedited is one of the requirements (subsection \ref{expedition}), inserting idle times in between loading (or completion times) is crucial for minimizing error in ordering due to delays caused by production handling and it should also reduce chance of scanner's buffer to overflow.
 
-Having a feasible schedule, we know how long it is, and we can tell approximately how much time we have until work hours end. We can take this time a distribute it in between items as idle times. We cannot simply determine where or how big idle times we should insert, because inserting an idle time in between some items does not have to result in feasible schedule. We have to run step 2 of the algorithm, job dispatching, again after any insertion of idle times.
+Having a feasible schedule, we know how long it is, and we can tell approximately how much time we have until work hours end. We can take this time a distribute it in between items as idle times. We cannot simply determine where or how big idle times we should insert, because inserting an idle time in between some items may not result in feasible schedule. We have to run step 2 of the algorithm, job dispatching, again after any insertion of idle times.
 
 Each scheduled item is associated with an idle time, which follows after the arrival of the item to an expedition ramp. Other items cannot be scheduled to arrive after an item $i$ for its duration $idle_i$ of idle time.
 
-Idle times should be distributed uniformly to prevent scanner's buffer overflow, but an expedited item that is followed by an item of different type can benefit a bit more from an idle time insertion. 
+Idle times should be distributed uniformly to prevent scanner's buffer overflow, but some items that are followed by an item of a different type may benefit more from idle times, because it may also prevent disruption in an expedition order.
 
-We propose to assign weights to each item (bigger weight, more likely to increase idle time to clarify what items benefit more from idle times.
+The method that is proposed in this stage is step count hill climbing (SCHC) algorithm presented by Yuri Bykov \cite{yuri}. SCHC is based on hill climbing local search, but instead of finding the most move, it evaluates first several moves and selects the one that improves the overall score of an schedule the most. The main benefit SCHC has over hill climbing algorithm or other some other local search algorithm is that we can set how many moves are evaluates in one step to regulate performance, since job dispatching can be computationally demanding. To properly use SCHC we have to specify what moves can this method use. 
 
-The method that is proposed in this stage is simulated annealing. To properly use simulated annealing we have to specify what moves can this method use and in what order. There are $n$ moves, one for an each item. Each move inserts any amount of idle time after arrival of an item to expedition ramp 
+There are $n$ moves, one for an each item. Each move inserts some low amount of idle time (seconds) after arrival to an expedition ramp of an item. A move is part of a move list and are sorted in increasing order based on a size of an idle time of an item that is associated with a move. SCHC evaluates several moves in this order and makes a next step, this continues until there are no improving moves to make or in other words, there is no remaining time left to distribute or all truck expeditions reached their maximum allowed duration.
 
-
-I propose distributing remaining time uniformly. Try to distribute remaining time, if the schedule is too long, try remaining time / 2, etc. until the remaining time is < something. After that, we can run simulated annealing to distribute the rest.
-
-Simulated annealing applies the first move that improves or does not change a score. The set of moves that is proposed is *... and order at which moves are consider is based on weight of an item and length of already assigned idle time. 
-
-*formula
-
-\section{Re-ordering}
-*Above is also local search, maybe merge?.
-
-Another improvement is using tabu search which swaps order number of two items. Some objectives are not easily minimized using some heuristics in step 2 like for example weighted penalty for scheduling two jobs right after each other on a single machine because it can lead to stopping a production
+In scenarios where the remaining time is substantial, idle time distribution may not perform well. To combat this performance issue, a special move is added to the beginning of the move list. This move inserts idle time to all items at once and thereby avoids unnecessary evaluations after every idle time insertion.
 
 \chapter{Implementation}
 \section{Simulation environment}
@@ -509,5 +488,51 @@ $scs_j = scc_j - p_j\;$
 return $1\;$
  \caption{Constraint - noOverlap}
 \end{algorithm}
+
+Alternatively, we can formulate this problem (with single expedition ramp) as a linear program, as follows:\\
+\textbf{Decision variables}
+
+\begin{itemize}
+\item $x_{ij}$: 1 if $job_i$ expedited immediately after $job_j$, 0 otherwise
+\item$c_i$: completion time of $job_i$ on the second stage
+\item$idle_i$: idle time followed after $job_i$ on the second stage
+\item$y_i$: order number of $job_i$ on the second stage
+\item$scc_i$: start time of $job_i$ on the first stage 
+\end{itemize}
+\textbf{Data}
+\begin{itemize}
+\item$p_i$: processing time of $job_i$ on the first stage
+\item$E_i$: set of allowed order numbers on the second stage for $job_i$
+\item$I_i$: set of indexes of jobs scheduled on machine $i$ on the first stage
+\item$M$: represents a large number
+\item$start$: time at which work hours start
+\item$end$: time at which work hours end
+\end{itemize}
+
+\begin{equation}
+\begin{aligned}
+&\text{minimize}
+&&f(\ldots)
+\end{aligned}
+\end{equation}
+\begin{equation}
+\begin{aligned}
+\text{subject to}\\
+& \sum_{i=0}^{n} x_{ij} = 1 &&\\
+& c_{i} - c_{j} + M(1 - x_{ij}) \geq s + idle_{i} && \text{for}\; i,j = 1, \ldots, n\\
+& c_{i} - scc_{i0} = p_{i} + t_i + s + idle_i && \text{for}\; i = 1, \ldots, n\\
+& scc_{i} + p_i < scc_j + M(1 - x_{ij}) && k = 0,\ldots,n, i,j \in I_k\\
+& y_{i} - y_{j} < c_i - c_j + M(1 - x_{ij}) && \text{for}\; i,j = 1, \ldots, n\\
+& y_i \in E_i && \text{for}\; i = 1, \ldots, n\\
+& x_{ij} \in \{0, 1\}  && \text{for}\; i,j = 1, \ldots, n\\ 
+& c_i \geq start && \text{for}\; i = 1, \ldots, n\\
+& c_i \leq end && \text{for}\; i = 1, \ldots, n\\
+& scc_{i} \geq start - p_i && \text{for}\; i = 1, \ldots, n\\
+& idle_i \geq 0 && \text{for}\; i = 1, \ldots, n\\
+\end{aligned}
+\end{equation}
+\\
+
+
 \end{document}
 
