@@ -61,7 +61,7 @@ Scheduling is a well studied and practical topic. It is widely used in manufactu
 
 Since the beginning of research in scheduling, many methods and approaches were developed for finding schedules close to optimal schedule in a reasonable time, but what is a good or optimal schedule? Determining the objective of a schedule is a problem on its own. The usual objective of scheduling is to minimize the makespan, which is the duration of a schedule. This objective alone is usually not sufficient because it does not consider the stochastic nature of real-world, where random events can change the schedule for the worse. In that case, the most valuable schedule might be the one where these random events change a schedule the least and makespan is still small. Another reason why makespan or other simple objectives that are often mentioned in literature might not be sufficient is that some facilities may demand complex customized requirements tailored just for them. For example, in case of an automated warehouse, it may be crucial to not only finish expedition in required time but to also expedite items in the required order. 
 
-In this thesis, general methods for solving scheduling problems relevant to scheduling a daily expedition of the given automated warehouse configuration are discussed. Then, method and an objective of a schedule for the given automated warehouse and scenario is proposed. Finally, proposed method is implemented and evaluated based on results from the provided simulation tool. 
+In this thesis, general methods for solving scheduling problems relevant to scheduling a daily expedition of the given automated warehouse configuration are discussed. Then, method and an objective of a schedule for the given automated warehouse and scenario is proposed. Finally, proposed method is implemented and evaluated in simulation tool. 
 
 \section{The automated warehouse}
 \label{sec:wh}
@@ -106,7 +106,7 @@ Several basic parameters were provided for the given automated warehouse. These 
 
 \section{Goals and motivation}
 
-The goal of this thesis is to create a schedule in reasonable time by assigning trucks planned for a day to expedition ramps, determining their order, determining order at which items will be expedited and finally determine specific time at which stacker cranes should start unloading each item. Since there is no information about item production, we cannot incorporate production handling in our schedule, but knowing that production handling can delay unloading of an item, we can try to minimize effect that production handling has on the schedule. How much production handling affects the schedule and if or how much are some of the requirements from Section \ref{sec:wh}, like preventing a buffer from filling up, violated sets how good the schedule is. To properly evaluate the schedule, it has to be integrated to provided simulation tool so that the created schedule can be observed in action and evaluated based on it. With a combination of the schedule and the simulation tool, we are also able to get data about the capabilities of the warehouse itself, which is valuable information when designing an automated warehouse. Integration of the scheduler to the simulation tool also enriches the simulation tool and can be used in future projects.
+The goal of this thesis is to create a schedule in reasonable time by assigning trucks planned for a day to expedition ramps, determining their order, determining order at which items will be expedited and finally determine specific time at which stacker cranes should start unloading each item. Since there is no information about item production, we cannot incorporate production handling in our schedule, but knowing that production handling can delay an unloading of an item, we can try to minimize effect that production handling has on the schedule. How much production handling affects the schedule and if or how much are some of the requirements from Section \ref{sec:wh}, like preventing a buffer from filling up, violated sets how good the schedule is. To properly evaluate the schedule, it has to be integrated to provided simulation tool so that the created schedule can be observed in action and evaluated based on it. With a combination of the schedule and the simulation tool, we are also able to get data about the capabilities of the warehouse itself, which is valuable information when designing an automated warehouse. Integration of the scheduler to the simulation tool also enriches the simulation tool and can be used in future projects.
 
 \section{Structure of this thesis}
 
@@ -225,8 +225,6 @@ For convenience we formulate this problem as constraint satisfaction problem as 
 
 Where constraint \ref{eq:idcons2} ensures that a variable $pos_i$ represent an order at which an item $i$ is loaded at expedition ramp $r_i$. Constraints \ref{eq:idcons1} and \ref{eq:idcons4} secures that stacker cranes and scanners can process only one item at a time respectively. Finally, Constraint \ref{eq:idcons3} checks if type of an item $i$ is expected at expedition ramp $r_i$ in $pos_i$-th order.
 
-An item from the warehouse 
-  
 Alternatively, we can formulate this problem (with single expedition ramp) as a linear program, as follows:\\
 \textbf{Decision variables}
 
@@ -416,15 +414,15 @@ In this phase, we also need to take into consideration some of the objectives. I
 The algorithm starts by putting items from the warehouse and times from domains $C_i$ to a ordered queue $items$ (See Subsubsection \ref{subsubsec:itemsordering}). Then algorithm selects a $ramp$ and cycles through $machines$ (stacker cranes) in established order until any $machine$ has an item with a same type as a request next in order on a $ramp$. Then it selects the shortest completion time from domain $C_i$ of an unload action of this item, that satisfy constraints from Subsection \ref{subsec:itemdispatching}. 
 
 
-\subsubsection{Hybrid cyclic heuristics (Machines and ramp ordering)}
+\subsubsection{Latest job last heuristic (Machines and ramp ordering)}
 
-The aim of this heuristic is to get good utilization of machines in any time and process an expedition in all active ramps in similar speeds. The rule that is proposed to sort machines based on the time of the last processed unloading in increasing order and prioritize the first one. Basically the same rule is proposed for selection of a expedition ramp, but it is ordered based on the time ramp's latest loaded item passed a conveyor junction. The time an item is loaded is not suitable, since travel time to different expedition ramps can be different and thus it may result in different loading rates. *comparison in evaluation? Looks interesting 
-
+The aim of this heuristic is to get good utilization of machines in any time and process an expedition in all active ramps in similar speeds. The rule that is proposed to sort machines based on the time of the last processed unloading in increasing order and prioritize the first one. 
+Basically the same rule is proposed for selection of a expedition ramp, but it is ordered based on the time that ramp's latest loaded item passed a conveyor junction (the time an item left the warehouse). The time an item is loaded is not suitable, since travel time to different expedition ramps can be different and thus it may result in different loading rates. *comparison in evaluation?
 
 \subsubsection{Items ordering}
 \label{subsubsec:itemsordering}
 
-Items are order using LPT dispatching rule. *Reason in relevant work (Little bit mroe will be added later, but reasoning will be mostly in relevant work chapter. From johnson's rule it seems like SPT should perform better, but Kia said that Guinet tried to extend johnson's rule on FFL and compared it to SPT and LPT and LPT performs better.)
+Items are order using LPT dispatching rule for reasons stated in Section \ref{rules}. *Reason in relevant work (Little bit mroe will be added later, but reasoning will be mostly in relevant work chapter. From johnson's rule it seems like SPT should perform better, but Kia \cite{kia} said that Guinet (* cite Guinet too? Jen jsem si precetl co ostatni rikali) tried to extend johnson's rule on FFL and compared it to SPT and LPT and LPT performs better.)
 
 
 \begin{figure}[h]
@@ -437,15 +435,20 @@ Items are order using LPT dispatching rule. *Reason in relevant work (Little bit
 
 The goal of this phase is to take advantage of the remaining working hours, assuming there is remaining time, spread the expedition through the whole day and as a result create a more robust schedule. 
 
-Since order at which items are expedited is one of the requirements (subsection \ref{expedition}), inserting idle times is crucial for minimizing error in ordering due to delays caused by production handling.
+Since order at which items are expedited is one of the requirements (subsection \ref{expedition}), inserting idle times in between loading (or completion times) is crucial for minimizing error in ordering due to delays caused by production handling and it should also reduce chance of scanner's buffer to overflow.
 
-Having a feasible schedule, we know how long it is, and we can tell approximately how much time we have until work hours end. We can take this time a distribute it among items as idle times. Unless there is only single expedition ramp, we cannot simply determine where or how big idle times we should insert; we have to run step 2 of the algorithm again after any insertion of idle times.
+Having a feasible schedule, we know how long it is, and we can tell approximately how much time we have until work hours end. We can take this time a distribute it in between items as idle times. We cannot simply determine where or how big idle times we should insert, because inserting an idle time in between some items does not have to result in feasible schedule. We have to run step 2 of the algorithm, job dispatching, again after any insertion of idle times.
 
-Each scheduled item is associated with an idle time, which follows after the completion time of the item. Other items cannot be scheduled after some item $i$ for its duration of idle time.
+Each scheduled item is associated with an idle time, which follows after the arrival of the item to an expedition ramp. Other items cannot be scheduled to arrive after an item $i$ for its duration $idle_i$ of idle time.
 
-TBD
+Idle times should be distributed uniformly to prevent scanner's buffer overflow, but an expedited item that is followed by an item of different type can benefit a bit more from an idle time insertion. 
 
-Idle times should be distributed uniformly to prevent buffer overflow too, but some items can benefit more from idle times (last item of its type).  Assign weights to each item (bigger weight, more likely to increase idle time). I propose distributing remaining time uniformly. Try to distribute remaining time, if the schedule is too long, try remaining time / 2, etc. until the remaining time is < something. After that, we can run simulated annealing to distribute the rest.
+We propose to assign weights to each item (bigger weight, more likely to increase idle time to clarify what items benefit more from idle times.
+
+The method that is proposed in this stage is simulated annealing. To properly use simulated annealing we have to specify what moves can this method use and in what order. There are $n$ moves, one for an each item. Each move inserts any amount of idle time after arrival of an item to expedition ramp 
+
+
+I propose distributing remaining time uniformly. Try to distribute remaining time, if the schedule is too long, try remaining time / 2, etc. until the remaining time is < something. After that, we can run simulated annealing to distribute the rest.
 
 Simulated annealing applies the first move that improves or does not change a score. The set of moves that is proposed is *... and order at which moves are consider is based on weight of an item and length of already assigned idle time. 
 
