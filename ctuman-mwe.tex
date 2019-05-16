@@ -231,19 +231,17 @@ Main requirements of this problem are to make a schedule that fits into working 
 
 \chapter{Related work}
 \label{chap:Related work}
-Methods for solving various forms of scheduling problems were extensively studied for decades now. Many of these methods are summarized in \cite{pinedo} and \cite{bucker}. We will mainly discuss methods that apply to the flexible flow line and parallel machine problem, which are relevant for this thesis. 
+Methods for solving various forms of scheduling problems were extensively studied for decades now. Many of these methods are summarized in Scheduling by M. Pinedo \cite{pinedo} and Scheduling Algorithm by P. Brucker\cite{bucker}. We will mainly discuss methods from these books that are applicable to the flexible flow line or parallel machine model problems and some general methods, which are relevant for this thesis. 
 
 \section{Overview of methods and approaches for finding optimal or nearly optimal schedule}
 
-Both problems we consider in this thesis are NP-hard \cite{complexity}. To find the optimal schedule, seemingly two general methods are used, Linear Integer Programming (LP) and Constraint Programming (CP) with a combination of pruning methods, an approximation of initial bounds and other general methods. LP approach is often obsolete for real-world problems, where there are hundreds or thousands jobs to schedule. CP is in many cases similar to LP, but offers better flexibility for designing constraints and can be optimized for specific problems and because of it it often outperforms LP.
+Both problems we consider in this thesis are NP-hard \cite{pinedo}. To find the optimal schedule of FFL, seemingly two general methods are used, Mixed Integer Programming (MIP) and Constraint Programming (CP) with a combination of pruning methods, an approximation of initial bounds and other general methods. MIP approach is often obsolete for real-world problems, where there are hundreds or thousands jobs to schedule. CP is in many cases similar to MIP, but offers better flexibility for designing constraints and can be optimized for specific problems and because of it it often outperforms MIP. More on CP can be found in Principles of Constraint Programming by K. Apt \cite{cp}.
 
-*I will describe CP here
+There are also some special cases of machine models and scheduling objectives for which we can construct an optimal schedule using different dispatching rules or algorithms. Neither FFL scheduling nor parallel machine model of truck allocation problem can be optimally solved using some dispatching rules as far as we know, but we will take a look on some special cases that can give as idea what dispatching rules should perform well.
 
-*There are few special cases where the optimal schedule can be obtained using some constructing heuristics. 
+\section{General methods for solving scheduling problems in practice}
 
-In the following sections, methods for our problems that are often used in literature are discussed.
-
-\subsection{Parallel machine model}
+\subsection{Parallel machine model and minimizing makespan}
 
 There are few construction heuristics from which we can construct a schedule that guarantees an upper bound of the makespan \cite{gram}. One of these heuristics is The Longest Processing Time first (LPT) heuristics \cite{pinedo} that guarantees that \cite{gram1969}:
 
@@ -253,24 +251,31 @@ There are few construction heuristics from which we can construct a schedule tha
 
 Where $m$ is a number of parallel machines.
 
-There are heuristics with slightly tighter bounds and are useful for problems with many jobs, many machines or both. I 
+But to find an optimal schedule, we need to use some general method like MIP or CP and LPT rule can be used for approximation of an upper bound.
 
 \subsection{Flexible flow line model}
 
-For small instances or simple cases of scheduling problem there often exists dispatching rules from which we can construct an optimal schedule for objectives like makespan or total flow time. For many practical problems or uncommon objectives it is hard to find optimal or sometimes even good heuristics. We can look how some heuristics perform on simple cases and try to apply it on our problem. 
+To find an optimal schedule for FFL with even some basic objectives like makespan can be solved again by using some of the general methods. 
 
-\section{Value of finding optimal solution}
-Finding an optimal solution is not worth it in real-world problems. Furthermore solving these problems with CSP or LP requires too much processing time. Even in literature, they are saying that around 50 jobs are the limit. 
-\section{Solving scheduling problems in practice}
-In practice, a solution is usually constructed using some simple heuristics. Complex heuristics is not worth using because of random events. Questions usually are what should I try to improve and what heuristics should be good for that. 
+Rule that is worth noting is Johnson's rule (also known as SPT(1)-LPT(2)) for minimizing makespan of FFL with two stages and a single machine at each of them. Johnson's rule constructs optimal schedule by partitioning jobs into to sets. The first set contains jobs that have processing time in the first stage lower than processing time in the second stage and the second stage vice-versa. Jobs from the first set are scheduled first in increasing order of their processing time (SPT). After that jobs from the second set are scheduled in decreasing order of their processing time (LPT). Jobs with equal processing time in both stages can be added to either of these two sets. More about the Johnson's rule can be found again in Scheduling by M. Pinedo \cite{pinedo}.
 
-FFLL 
+In our problem of item expedition, the processing time at a scanner is always the same and is lower than processing time at a machine. This gives us idea that SPT rule should utilize machines FFL well. Guinet \cite{guinet} proposed heuristic based on Johnson's rule for FFL and made comparison to SPT and LPT rules and concluded that LPT heuristics gives good result for makespan minimization (as stated by Kia \cite{kia}).
 
+\subsection{Local search techniques}
+
+In addition to mentioned dispatching rules like SPT, LPT or Johnson's rule, and CP, another popular methods for solving scheduling problems are variations of local search techniques. Local search is another very wide topic. In this thesis, we will describe the very basic idea behind local search. Again, detailed information and examples can be found in Scheduling by M. Pinedo \cite{pinedo}. 
+
+The local search algorithm takes an existing schedule an tries to improve it by searching through his neighborhood. The neighborhood consists of schedules that are generated from original schedule using some specific operation, we will be referring to it as move. The algorithm makes a step by evaluating schedules from a neighborhood and selecting new schedule from which it creates new neighborhood and begins the next step. There are many types of local search algorithms that usually differ in the way they select or reject the next move or how they create neighborhoods. 
+
+The specific algorithms that are often mention in literature are tabu-search, simulated annealing and genetic local search.
+
+
+Local search methods also do no guarantee finding an optimal schedule.
 
 \chapter{Proposed solution}
 \label{ch:Proposed solution}
 
-The proposed algorithm is designed in a way so that it is relatively simple and fast so that it can be easily applicable in practice and the provided simulation tool.
+The proposed algorithm is designed in a way so that it is relatively simple and fast so that it can be easily applicable in practice and can be potentially used for frequent rescheduling as reaction to some random events.
 
 It consists of four different phases.
 
@@ -281,7 +286,7 @@ It consists of four different phases.
     \item Idle time insertion
 \end{enumerate}
 
-As mentioned in \ref{simplicity}, focusing on the optimality of a schedule rather than simplicity does not perform well in practice. That being said, in the first phase algorithm optimally distributes trucks to ramps and thus solves the problem of truck allocation (Subsection \ref{subsec:truckallocation}). In the second phase, however, heuristic construction is used to get a good schedule by solving job dispatching problem (Subsection \ref{subsec:itemdispatching}) in a relatively short time. The third phase is used to further improve on assignments, which were made in the second and the third phases using local search algorithms. In the last phase, we insert idle times in between completion times $c_i$ to achieve good robustness to delays caused by prioritized production handling \cite{pinedo}. 
+The proposed method does not try to utilize machines optimally. Finding an optimal schedule require lots of computational power. Several MIP formulations have been proposed and various branch and bound approaches have been developed for these problems, but still only problems with around 50 jobs can be solved in reasonable time \cite{pinedo}. Furthermore because of production handling, original schedule may be disrupted and value of finding an optimal schedule will be lost. That being said, in the first phase algorithm optimally distributes trucks to ramps and thus solves the problem of truck allocation (Subsection \ref{subsec:truckallocation}). In the second phase, however, heuristic construction is used to get a good schedule by solving job dispatching problem (Subsection \ref{subsec:itemdispatching}) in a relatively short time. The third phase is used to further improve on assignments, which were made in the second and the third phases using local search algorithms. In the last phase, we insert idle times in between completion times $c_i$ to achieve good robustness to delays caused by prioritized production handling \cite{pinedo}. 
 
 \begin{figure}[H]
 \includegraphics[width=1.0\linewidth]{algo.jpg}
@@ -350,16 +355,12 @@ To improve the performance of these methods we need to select \textbf{upper boun
 
 There are no requirements for order at which trucks arrive, but assuming some trucks may be delayed. We propose ordering at which trucks arrive at the expedition ramp is determined by priority of a truck. A truck with higher priority is scheduled before a truck with lower priority on the same expedition ramp. If a truck is delayed, it affects trucks scheduled after it and it creates cascading effect, where all trucks behind the first delayed one are delayed if reserve time between them is not big enough. 
 
-
-*In the CP approach, LPT heuristics can also be used for the ordering of variables. This way the algorithm redistributes trucks with lower load first, which can lead to uniformly distributed workload faster.
-
 \section{Job dispatching}
 
 In this phase, we solve problem from Subsection \ref{subsec:itemdispatching} and thus create a feasible schedule.
 To obtain the feasible schedule, a constructive heuristic method is proposed. This method assigns values to variables in a way that after assigning value to every variable, we get a feasible solution without a need to backtrack.
 
-
-In this phase, we also need to take into consideration some of the objectives. If machines are not utilized properly in the constructive heuristic method, the duration of the schedule might be greater that the duration of working hours. Also the duration of truck expeditions may differ a lot if requests from two different trucks currently at an expedition ramp are processed at consistently different rates.
+In this phase, we also need to take into consideration some of the objectives. If machines are not utilized properly in the constructive heuristic method, the duration of the schedule might be greater that the duration of working hours or breakdown of a machine could have worse consequences. Also items should arrive to different expedition ramps in similar rate to ensure that truck expedition does not take significantly longer than expected.
 
 \begin{algorithm}[H]
 \SetAlgoLined
@@ -445,6 +446,7 @@ In scenarios where the remaining time is substantial, idle time distribution may
 \label{ch:Evaluation}
 \section{Performance}
 \section{Scenarios}
+Quickly summarize data 
 \section{Comparison}
 \subsection{Comparison of plan and behavior in simulation}
 Comparing different version (LS, no LS, heuristic 1, heuristic 2, ...) of algorithm too.
