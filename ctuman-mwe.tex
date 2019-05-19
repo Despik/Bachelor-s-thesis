@@ -353,7 +353,7 @@ The goal of this objective is to keep idle times uniformly distributed.
 
 \end{enumerate}
  
- Experimenting with these objectives, weights, their effect and trade-off between them are shown in chapter \ref{ch:Evaluation}.
+ Experimenting with these objectives, weights, their effect and trade-off between them are shown in Chapter \ref{ch:Evaluation}.
 
 
 \section{Truck allocation}
@@ -376,7 +376,7 @@ In this phase, we solve the problem from Subsection \ref{subsec:itemdispatching}
 To obtain a feasible schedule, a constructive heuristic method is proposed. This method assigns values to variables in a way that after assigning value to every variable, we get a feasible solution without a need to backtrack.
 
 In this phase, we also need to take into consideration some of the objectives. If machines are not utilized properly by the proposed method, the duration of the schedule might be greater than the duration of working hours or breakdown of a machine could have worse consequences. Also, items should arrive at different expedition ramps in similar rate to ensure that truck expedition does not take significantly longer than expected.
-
+ 
 \begin{algorithm}[H]
 \SetAlgoLined
 \KwResult{A feasible schedule S}
@@ -421,7 +421,7 @@ Items are ordered using LPT dispatching rule for reasons stated in Subsection \r
 
 
 \begin{figure}[h]
-\includegraphics[width=0.8\linewidth]{order.jpg}
+\includegraphics[width=1\linewidth]{order.jpg}
 \caption{Diagram showing an ordering at which items are expedited.}
 \label{order}
 \end{figure}
@@ -442,9 +442,13 @@ The goal of this phase is to take advantage of the remaining time of working hou
 
 Since order at which items are expedited is one of the requirements (subsection \ref{expedition}), inserting idle times in between loading (or completion times) is crucial for minimizing number of errors in ordering due to delays caused by prioritized production handling. It also reduces the chance of scanner's buffer to overflow.
 
+
+* misto toho, ze "item je asociovan s ..." Mozna bych mel rict, ze vytvarim tuhle asociaci a nebo to lip popsat na zacatku
 Each scheduled item is associated with an idle time, which follows the arrival of the item to an expedition ramp. Other items cannot be scheduled to arrive after an item $i$ for its duration of idle time $\theta_i$.
 
 *(to uz rikam u score)Idle times should be distributed uniformly to prevent scanner's buffer overflow, but some items that are followed by an item of a different type may benefit more from idle times, because it may also prevent disruption in an expedition order.
+
+*odpoved na komentar*
 
 The method that is proposed in this stage is step count hill climbing (SCHC) algorithm presented by Yuri Bykov \cite{yuri}. SCHC is based on hill climbing local search, but instead of finding the most valuable move across all moves, it first evaluates several moves and selects the one that improves the overall score of a schedule the most. The main benefit SCHC has over hill climbing algorithm or other some other local search algorithm is that we can set how many moves are evaluated in one step to regulate performance since job dispatching can be computationally demanding. To properly use SCHC, we have to specify what moves can this method use. 
 
@@ -452,11 +456,102 @@ There are $n$ moves, one for each item. Each move inserts some low amount of idl
 
 *pseudocode
 
-In scenarios where the remaining time is substantial, idle time distribution may not perform well. To combat this performance issue, a special move is added to the beginning of the move list. This move inserts idle time to all items at once and thereby avoids unnecessary evaluations after every idle time insertion.
+In scenarios when there is a lot of time remaining (several hours) until the work hours end, idle time distribution may not perform well. To combat this performance issue, a special move is added to the beginning of the move list. This move inserts idle time to all items at once and thereby avoids unnecessary evaluations after every idle time insertion.
 
 \chapter{Implementation}
-\section{Simulation environment}
+
+ In this chapter, I will briefly describe the architecture of the simulation tool to then describe, how is the scheduler implemented and how it is incorporated into the simulator.
+
+\section{The automated warehouse simulator}
+
+ The simulator is based on the AgentPolis \cite{agentpolis}, which is agent-based platform for modeling transportation systems with discrete-event simulation core. The simulator was created for evaluation of different automated warehouse designs and is currently still in development.
+ 
+ The simulator is driven by an event queue. Every simulation event is added to the queue and scheduled to be fired at the specific time. A fired event is then caught by event handlers. 
+ 
+ The most relevant event handler for this thesis is the simulator's dispatcher. The dispatcher handles events like "an item is produced", "an item is requested at some expedition ramp" and so on. The dispatcher also creates so called stacker crane unload (SCU) activities from entries in expedition input file and event and stacker crane store (SCS) activities from events signalizing that an item is produced. These activities are then scheduled and executed by stacker cranes. For better understanding, the following subsection describes the most relevant parts of the simulator in more detail.
+ 
+\begin{figure}[H]
+\includegraphics[width=1\linewidth]{flowchart2.png}
+\caption{Diagram showing the flow of the activity creation and execution}
+\label{flowchart1}
+\end{figure}
+
+\subsection{Activities}
+
+Stacker cranes can pick up or put down an item, and move horizontally or vertically in an aisle. These actions are in the simulator wrapped into storing and unloading action.
+
+\subsubsection{Stacker crane store activity}
+
+Every SCS activity is associated with a stacker crane, an item to be stored and storage space to which it is going to be stored.
+
+By executing this activity, a stacker crane carries out these actions.
+
+\begin{enumerate}
+    \item Move to the beginning of the aisle
+    \item Pick up the item
+    \item Move to the free position
+    \item Store the item
+\end{enumerate}
+
+\subsubsection{Stacker crane unload activity}
+
+Every SCU activity is associated with a stacker crane and an item to be unloaded.
+
+By executing this activity, a stacker crane carries out these actions.
+
+\begin{enumerate}
+    \item Move to the item to be unloaded
+    \item Pick up the item
+    \item Move to the beginning of the aisle
+    \item Put the item on the conveyor leading to expedition ramps
+\end{enumerate}
+
+\subsubsection{The activity queues}
+\label{subsec:activityqueue}
+
+ The activity queue stores activities to be executed. There are two activity queues. The first activity queue stores SCS activities and the second stores SCU activities. Both SCU and SCS activities are placed into their queues on creation. The way that activities are taken out and executed from the queue is shown in Pseudocode \ref{alg:activityexec}.
+
+\begin{algorithm}[H]
+\SetAlgoLined
+{
+\ForEach{$activity \leftarrow activityQueueSCS$}{
+    \If{activity.stackerCrane is not idle}{
+        $activity.execute()\;$
+    }
+}
+\ForEach{$activity \leftarrow activityQueueSCU$}{
+    \If{activity.stackerCrane is not idle}{
+        $activity.execute()\;$
+    }
+}
+}
+\caption{Activity execution}
+\label{alg:activityexec}
+\end{algorithm}
+
+The \emph{Activity execution} is triggered after activities creation or an activity is executed (Shown in Figure \ref{flowchart1}).
+
+
+\subsection{Production and expedition handling in the simulator}
+
+First off, the input of the simulator is config file describing the layout of the warehouse and stacker cranes parameters, csv file with item descriptors and time stamps representing the production schedule and csv file with an item types, quantities and truck id representing an expedition to be scheduled. To be clear what information is available, see Section \ref{subsubsubsec:availableinformation}.
+
+Knowing what are activities and that we have files specifying production schedule and expedition demand, we describe how are these activities created and executed.
+
+Starting with production, the schedule for the production is created at the beginning of a day in the simulation. Entries from the production input file are parsed and $PRODUCTION_GENERATED$ events put in the event queue. These events signalize that an item is produced and is on it's way to the automated warehouse. The dispatcher handles these events and decides to what aisle will the produced item be delivered and schedules a new event, $ITEM_ARRIVAL$, for the time it arrives to the assigned aisle. When the dispatcher handles $ITEM_ARRIVAL$ event, it creates SCS activity and puts it into the activity queue. How are activities executed from the activity queue is explained in Section \ref{subsubsec:activityqueue}.
+
+The expedition handling works similarly, but it also has some major differences. The expedition input file is also parsed at the beginning of a day in the simulation. Then one event, $TRUCK\_ARRIVAL$, per expedition ramp are created (if there are more trucks planned for that day than expedition ramps) and they are scheduled for the beginning of the work hours. 
+
+The dispatcher creates SCU activities from a truck expedition request upon catching $TRUCK\_ARRIVAL$ event. After every SCU activity of a truck expedition is finished, another $TRUCK\_ARRIVAL$ event is trigger for some another planned truck for that day.  
+
+Order at which trucks are called or activities are processed is random.
+
+The simulator generates report at the end, which includes information about truck expedition durations, time stamps of activities, reached buffer sizes, average idle times of stacker crane among other.
+
+
 \section{Scheduler module}
+
+
 \chapter{Evaluation}
 \label{ch:Evaluation}
 \section{Performance}
@@ -475,6 +570,10 @@ Mainly significance of idle times (at scanner or machines)
 
 
 *************************
+
+ and sorts them by their execution time (Since SCS activities do not have specified execution time, they are always prioritized and placed at the beginning the queue sorted from FIFO order)
+ 
+ 
 
 Having a feasible schedule, we know how long it is, and we can tell approximately how much time we have until work hours end. We can take this time a distribute it in between items as idle times. We cannot simply determine where or how big idle times we should insert, because inserting an idle time in between some items may not result in a feasible schedule. We have to run step 2 of the algorithm, job dispatching, again after any insertion of idle times.
 
