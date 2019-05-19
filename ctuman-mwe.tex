@@ -357,14 +357,14 @@ The goal of this objective is to keep idle times uniformly distributed.
 
 
 \section{Truck allocation}
-
+\label{sec:truckallocationprop}
 In this phase, we solve the problem from Subsection \ref{subsec:truckallocation}. The goal of this phase is to distribute trucks among expedition ramps so that workers at each ramp work almost the same time and do nearly the same amount of work. This can be achieved by minimizing the makespan. By minimizing the makespan, we achieve good utilization of machines or in our case expedition ramps, which leads to a balanced load on expedition ramps \cite{pinedo}. 
 
 In many factories as well as in the automated warehouse, there are not many trucks scheduled for a single day (under 50). On top of that, the objective of this problem, minimizing a makespan, is a very simple objective. This makes this problem a good example where CP or MIP performs well. Even for it being a real-world problem, finding the optimal solution for this case is valuable since stochastic events like "need to reschedule a truck to different ramp" or "truck needs more or fewer items than it originally demanded" do not occur very often.
 
 This problem was already formulated as an assignment problem in Subsection \ref{subsec:truckallocation}. This formulation can be also used for the CP problem.
 
-To improve the performance of these methods, we need to select \textbf{upper bound} of the objective and variables. Upper bound is calculated using LPT heuristics mentioned in Chapter \ref{chap:Related work}. LPT heuristics can also be used as an alternative to CP or MIP solution in big instances of the problem.
+To improve the performance of these methods, we need to select \textbf{upper bound} of the objective and variables. Upper bound is calculated using LPT heuristics mentioned in Chapter \ref{chap:Related work}. Going back to the problem formulation in Subsection \ref{subsec:truckallocation}, we can not specify that the domain of the decision variables $y_i$ is $\{0, \ldots, C_{max}(LPT)\}$. The LPT heuristics can also be used as an alternative to CP or MIP solution for big instances of the problem.
 
 There are no requirements for order at which trucks arrive, but assuming some trucks may be delayed. We propose ordering at which trucks arrive at the expedition ramp is determined by priority of a truck. A truck with higher priority is scheduled before a truck with lower priority on the same expedition ramp. If a truck is delayed, it affects trucks scheduled after it, and it creates a cascading effect, where all trucks behind the first delayed one are delayed if reserve time between them is not big enough.
 
@@ -548,8 +548,29 @@ Order at which trucks are called or activities are processed is random.
 
 The simulator generates report at the end, which includes information about truck expedition durations, time stamps of activities, reached buffer sizes, average idle times of stacker crane among other.
 
-
 \section{Scheduler module}
+
+In this section, we will describe integration into the simulator first and then we describe the implementation of the algorithm itself.
+
+\subsection{The simulator integration}
+
+*
+
+\subsection{Algorithm implementation}
+
+The following described the details of the implementation the algorithm from Chapter \ref{ch:Proposed solution}. The first phase, truck allocation, was solved using open-source constraint programming library, ***
+
+\subsubsection{Truck allocation}
+
+As proposed in Section \ref{sec:truckallocationprop}, the truck allocation is solved using Constraint programming. Specifically, I used Choco open-source java library dedicated to constraint programming \cite{choco}. The library can be used to model the problem in declarative way by stating the set of constraints. The library comes up with many different constraints with state-of-the-art implementations, offers different search algorithms and strategies and also provide multi-thread resolution. The scheduler is able to achieve good performance and allows the developer to easily tweak or modify the solving process.
+
+\subsubsection{Job dispatching}
+
+*uml
+
+\subsubsection{Re-ordering and Idle time insertion}
+
+opta
 
 
 \chapter{Evaluation}
