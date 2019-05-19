@@ -1,6 +1,6 @@
 \documentclass{ctuthesis}
 \usepackage[ruled,vlined,linesnumbered]{algorithm2e}
-
+\usepackage{listings}
 \ctusetup{
     xdoctype = B,
     xfaculty = F3,
@@ -542,7 +542,7 @@ Starting with production, the schedule for the production is created at the begi
 
 The expedition handling works similarly, but it also has some major differences. The expedition input file is also parsed at the beginning of a day in the simulation. Then one event, $TRUCK\_ARRIVAL$, per expedition ramp are created (if there are more trucks planned for that day than expedition ramps) and they are scheduled for the beginning of the work hours. 
 
-The dispatcher creates SCU activities from a truck expedition request upon catching $TRUCK\_ARRIVAL$ event. After every SCU activity of a truck expedition is finished, another $TRUCK\_ARRIVAL$ event is trigger for some another planned truck for that day.  
+The dispatcher creates SCU activities for each a truck expedition item request upon catching $TRUCK\_ARRIVAL$ event. After every SCU activity of a truck expedition is finished, another $TRUCK\_ARRIVAL$ event is trigger for some another planned truck for that day.  
 
 Order at which trucks are called or activities are processed is random.
 
@@ -552,25 +552,96 @@ The simulator generates report at the end, which includes information about truc
 
 In this section, we will describe integration into the simulator first and then we describe the implementation of the algorithm itself.
 
-\subsection{The simulator integration}
+\subsection{The schedule integration}
 
-*
+To integrate the scheduler we need to change how the expedition handling works, the way activities are executed from activity queues and enriches activities. 
+
+Starting with activities, we add new parameter $startTime$ indicating what time should this activity be executed. Since activities of activity queues are executed in random order, we need to change how they work so that we can execute activities at $currentSimulationTime \geq startTime$. Instead of two separated queues,  we introduced single new priority queue that contains both SCU and SCS activities sorted in increasing order of their $startTime$. SCS activities have their $startTime$ set to zero. How are activities executed from this queue is shown in Algorithm \ref{alg:activityexec2}
+
+\begin{algorithm}[H]
+\SetAlgoLined
+{
+\ForEach{$activity \leftarrow priorityQueue$}{
+    \If{$currentSimulationTime \geq activity.startTime$ $\land$ activity.stackerCrane is not idle}{
+        $activity.execute()\;$
+    }
+}
+}
+\caption{Proposed activity execution}
+\label{alg:activityexec2}
+\end{algorithm}
+
+Now that we specified the new approach to activity execution, we describe the new way to SCU activity creation. 
+
+The expedition input file is still parsed at the beginning of a day in the simulation. Instead of scheduling $TRUCK\_ARRIVAL$ events, we schedule the whole expedition using the proposed algorithm. The newly created schedule is then converted to activities and inserted into the priority queue. The new flowchart is shown in Figure \ref{flowchartNew}. 
+
+\begin{figure}[H]
+\includegraphics[width=1\linewidth]{flowchartNew.png}
+\caption{Diagram showing the flow of the activity creation and execution}
+\label{flowchartNew}
+\end{figure}
+
+The dispatcher creates SCU activities for each a truck expedition item request upon catching $TRUCK\_ARRIVAL$ event. After every SCU activity of a truck expedition is finished, another $TRUCK\_ARRIVAL$ event is trigger for some another planned truck for that day.  
+
 
 \subsection{Algorithm implementation}
 
-The following described the details of the implementation the algorithm from Chapter \ref{ch:Proposed solution}. The first phase, truck allocation, was solved using open-source constraint programming library, ***
+The following described the details of the implementation the algorithm from Chapter \ref{ch:Proposed solution}. How the schedule is created is proposed in Chapter \ref{ch:Proposed solution}, but to achieve good maintainability and performance open-source libraries are used in the first, third and fourth phase of the algorithm. The first phase was solved using open-source constraint programming library, Choco \cite{choco}. Both third and fourth phases were solved using open-source planning engine, Optaplanner \cite{optaplanner}, which is used for local searching.
 
 \subsubsection{Truck allocation}
 
-As proposed in Section \ref{sec:truckallocationprop}, the truck allocation is solved using Constraint programming. Specifically, I used Choco open-source java library dedicated to constraint programming \cite{choco}. The library can be used to model the problem in declarative way by stating the set of constraints. The library comes up with many different constraints with state-of-the-art implementations, offers different search algorithms and strategies and also provide multi-thread resolution. The scheduler is able to achieve good performance and allows the developer to easily tweak or modify the solving process.
-
-\subsubsection{Job dispatching}
-
-*uml
+As proposed in Section \ref{sec:truckallocationprop}, the truck allocation is solved using Constraint programming. Specifically, I used Choco open-source java library dedicated to constraint programming \cite{choco}. The library can be used to model the problem in declarative way by stating the set of constraints. The library comes up with many different constraints with state-of-the-art implementations, offers different search algorithms and strategies and also provide multi-thread resolution. Because of this, the scheduler is able to achieve good performance and allows a developer to easily tweak or modify the solving process.
 
 \subsubsection{Re-ordering and Idle time insertion}
 
-opta
+To use local search in Optaplanner, we need to need to generate moves of local searches as stated in Sections \ref{sec:reordering} and \ref{sec:idletimeinsertion}. Order of moves, search techniques and parameters for different local searches, like for example temperature of simulated-annealing, can be all setup in config file of the Optaplanner's solver.
+
+The example of the SCHC configuration is shown in following listing.
+
+\lstset{
+  language=XML,
+  morekeywords={encoding,
+    solver,environmentMode,scanAnnotatedClasses,ScoreDirectoryFactory,xs:attribute}
+}
+\begin{lstlisting}[language=XML, caption=Optaplanner local search configuration]
+<?xml version="1.0" encoding="UTF-8"?>
+<solver>
+    <environmentMode>FULL_ASSERT</environmentMode>
+    <scanAnnotatedClasses/>
+
+    <scoreDirectorFactory>
+     <easyScoreCalculatorClass>
+      cz.kalinja6.scheduler.ScoreCalculator
+     </easyScoreCalculatorClass>
+    </scoreDirectorFactory>
+
+    <localSearch>
+     <unionMoveSelector>
+      <moveListFactory>
+       <moveListFactoryClass>
+        cz.kalinja6.scheduler.InsertIdleTimeMoveFactory
+       </moveListFactoryClass>
+      </moveListFactory>
+       <selectionOrder>ORIGINAL</selectionOrder>
+     </unionMoveSelector>
+      <acceptor>
+       <stepCountingHillClimbingSize>
+        400
+       </stepCountingHillClimbingSize>
+      </acceptor>
+       <forager>
+        <acceptedCountLimit>1</acceptedCountLimit>
+       </forager>
+    </localSearch>
+    <termination>
+     <secondsSpentLimit>30</secondsSpentLimit>
+    </termination>
+</solver>
+\end{lstlisting}
+
+
+
+
 
 
 \chapter{Evaluation}
