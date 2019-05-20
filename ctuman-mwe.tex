@@ -553,6 +553,7 @@ The simulator generates report at the end, which includes information about truc
 In this section, we will describe integration into the simulator first and then we describe the implementation of the algorithm itself.
 
 \subsection{The schedule integration}
+\label{subsec:scheduleintegration}
 
 To integrate the scheduler we need to change how the expedition handling works, the way activities are executed from activity queues and enriches activities. 
 
@@ -583,6 +584,7 @@ The expedition input file is still parsed at the beginning of a day in the simul
 
 The dispatcher creates SCU activities for each a truck expedition item request upon catching $TRUCK\_ARRIVAL$ event. After every SCU activity of a truck expedition is finished, another $TRUCK\_ARRIVAL$ event is trigger for some another planned truck for that day.  
 
+To be able to evaluate the schedule in the simulation, we create a new schedule from the execution and completion time of activities at the end of the simulation. We can then compare this schedule, where some activities might have been delayed to the one created by the scheduler. 
 
 \subsection{Algorithm implementation}
 
@@ -599,11 +601,6 @@ Another thing that is needed, is to generate moves of local searches as stated i
 
 The example of the SCHC configuration is shown in following listing.
 
-\lstset{
-  language=XML,
-  morekeywords={encoding,
-    solver,environmentMode,scanAnnotatedClasses,ScoreDirectoryFactory,xs:attribute}
-}
 \begin{lstlisting}[language=XML, caption=Optaplanner local search configuration]
 <?xml version="1.0" encoding="UTF-8"?>
 <solver>
@@ -639,10 +636,6 @@ The example of the SCHC configuration is shown in following listing.
  </termination>
 </solver>
 \end{lstlisting}
-
-
-
-
 
 
 \chapter{Evaluation}
@@ -709,13 +702,15 @@ phase 4 moves evaluated & 330 steps & 39 steps & 10 steps & 0 steps \\
 \end{center}
 \section{Comparison}
 
+The first set of five figures depict comparison between makespan of a schedule created in phase two of the algorithm and the makespan of a the schedule created at the end of the simulation (See the end of Subsection \ref{subsec:scheduleintegration}).
+
 LPT + proposed - only phase to phase 2, 1. compare to optimal makespan, 2. compare insertion real and planned
 SPT + proposed - ..., 
 LPT + cyclic ramp \& machine? selection
 SPT + cyclic ramp \& machine? selection - ...
 maybe just random?
 
-\begin{figure*}
+\begin{figure*}[h]
 \begin{multicols}{2}
     \includegraphics[width=\linewidth]{sc1.jpg}\par 
     \includegraphics[width=\linewidth]{sc1.jpg}\par
@@ -723,6 +718,9 @@ maybe just random?
 \begin{multicols}{2}
     \includegraphics[width=\linewidth]{sc1.jpg}\par 
     \includegraphics[width=\linewidth]{sc1.jpg}\par
+    \end{multicols}
+\begin{multicols}{1}
+    \includegraphics[width=\linewidth]{sc1.jpg}\par 
     \end{multicols}
 \caption{Phase 2 vs optimal, LPT + proposed, SPT + ...}
 \end{figure*}
