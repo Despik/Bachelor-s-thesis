@@ -409,8 +409,8 @@ In this phase, we also need to take into consideration some of the objectives. I
 The algorithm starts by putting items from the warehouse and times from domains $C_i$ to an ordered queue $items$ (See Subsubsection \ref{subsubsec:itemsordering}). Then algorithm selects a $ramp$ and cycles through $machines$ (stacker cranes) in established order until any $machine$ has an item with the same type as a request next in order on a $ramp$. Then it selects the shortest completion time from domain $C_i$ of an unload action of this item, that satisfy constraints from Subsection \ref{subsec:itemdispatching}. 
 
 
-\subsubsection{Latest job last heuristic (Machines and ramp ordering)}
-
+\subsubsection{Latest job last (LJL) heuristic }
+This heuristic deals with machine and ramp selection.
 The aim of this heuristic is to get good utilization of machines at any time and process an expedition in all active ramps at similar speeds. The rule that is proposed to sort machines based on the time of the last processed unloading in increasing order and prioritize the first one. 
 Basically, the same rule is proposed for the selection of an expedition ramp, but it is ordered based on the time that ramp's latest loaded item passed a conveyor junction (the time an item left the warehouse). Ordering by a time an item is loaded is not suitable, since travel time to different expedition ramps can be different, and thus it may result in different loading rates. *comparison in evaluation?
 
@@ -601,6 +601,7 @@ Another thing that is needed, is to generate moves of local searches as stated i
 
 The example of the SCHC configuration is shown in following listing.
 
+
 \begin{lstlisting}[language=XML, caption=Optaplanner local search configuration]
 <?xml version="1.0" encoding="UTF-8"?>
 <solver>
@@ -634,7 +635,6 @@ The example of the SCHC configuration is shown in following listing.
  <termination>
   <secondsSpentLimit>30</secondsSpentLimit>
  </termination>
-</solver>
 \end{lstlisting}
 
 
@@ -681,7 +681,13 @@ number of types & 84 & 101 & 101 & 101 \\
 
 \subsection{Dataset B}
 \label{seubsec:B}
-Dataset B is used for comparison of different heuristics and local search algorithms... same as A2 a konfigurace robota je taky ok, ale layout je jinaci (mensi pocet ramp)
+Dataset B is used for comparison of different heuristics. These data are used:
+
+B1 ...
+
+B2 ...
+
+The input production and expedition files are the ones from data A2 and it is same for every data in dataset B.
 
 \section{Performance}
 
@@ -700,72 +706,93 @@ phase 4 moves evaluated & 330 steps & 39 steps & 10 steps & 0 steps \\
 \hline
 \end{tabular}
 \end{center}
-\section{Comparison}
+\section{Heuristics comparison}
 
-The first set of five figures depict comparison between makespan of a schedule created in phase two of the algorithm and the makespan of a the schedule created at the end of the simulation (See the end of Subsection \ref{subsec:scheduleintegration}).
+In this section schedules created from dataset B using different rules and heuristics are presented. For each schedule, we take a look at their utilization of machines by comparing makespan of these schedules, before idle time insertion. To be able to tell how well the machines were utilized. We also show  the approximation of optimal makespan in each figure.  It assumes that throughput of the warehouse is limited only by a scanner and calculates how long does a scanner need to scan all items on the expedition expedition ramp that expects the most items. The calculation of this approximation can be seen in Equation \ref{eq:approx}.
 
-LPT + proposed - only phase to phase 2, 1. compare to optimal makespan, 2. compare insertion real and planned
-SPT + proposed - ..., 
-LPT + cyclic ramp \& machine? selection
-SPT + cyclic ramp \& machine? selection - ...
-maybe just random?
+Then we take a look at each schedule individually. Each schedule created by the scheduler is compared to the version of it that was constructed from activities at the end of the simulation.
 
-\begin{figure*}[h]
-\begin{multicols}{2}
-    \includegraphics[width=\linewidth]{sc1.jpg}\par 
-    \includegraphics[width=\linewidth]{sc1.jpg}\par
-    \end{multicols}
-\begin{multicols}{2}
-    \includegraphics[width=\linewidth]{sc1.jpg}\par 
-    \includegraphics[width=\linewidth]{sc1.jpg}\par
-    \end{multicols}
-\begin{multicols}{1}
-    \includegraphics[width=\linewidth]{sc1.jpg}\par 
-    \end{multicols}
-\caption{Phase 2 vs optimal, LPT + proposed, SPT + ...}
-\end{figure*}
+*
+\begin{equation}
+\label{eq:approx}
+    \max(s \cdot size_0, \ldots, s \cdot size_r)
+\end{equation}
 
-\begin{figure*}
-\begin{multicols}{2}
-    \includegraphics[width=\linewidth]{sc1.jpg}\par 
-    \includegraphics[width=\linewidth]{sc1.jpg}\par
-    \end{multicols}
-\begin{multicols}{2}
-    \includegraphics[width=\linewidth]{sc1.jpg}\par 
-    \includegraphics[width=\linewidth]{sc1.jpg}\par
-    \end{multicols}
-\begin{multicols}{2}
-    \includegraphics[width=\linewidth]{sc1.jpg}\par 
-    \includegraphics[width=\linewidth]{sc1.jpg}\par
-    \end{multicols}
-\begin{multicols}{2}
-    \includegraphics[width=\linewidth]{sc1.jpg}\par 
-    \includegraphics[width=\linewidth]{sc1.jpg}\par
-    \end{multicols}
-\caption{Comparison of time difference.}
-\end{figure*}
+\subsection{LPT-LJL}
+\begin{figure}[H]
+\includegraphics[width=\linewidth]{c1.png}
+\caption{Makespans of the LPT-LJL schedule created by the second phase of the proposed algorithm}
+\label{fig:c1}
+\end{figure}
+
+\begin{center}
+\begin{tabular}{ |c|| c | c |} 
+\hline
+attribute/schedule & B1 - LPT-LJL & B1 - scheduled resulted from the simulation & B2 - LPT-LJL & B2 - scheduled resulted from the simulation\\ 
+\hline
+score(hard/soft) & 0/0 & d & h & g \\
+\hline
+scanners max. buffer size reached & 0 & 10 & 0 & 10\\ 
+\hline
+average length of idle times & 0 & 0 & 0 & 10\\ 
+\hline
+\end{tabular}
+\end{center}
+
+
+
+\subsection{SPT + LJL}
+\begin{figure}[H]
+\includegraphics[width=\linewidth]{c2.png}
+\caption{Makespans of the SPT-LJL schedule created by the second phase of the proposed algorithm}
+\label{fig:c2}
+\end{figure}
+
+\subsection{LPT + cyclic ramp and machine selection}
+
+\begin{figure}[H]
+\includegraphics[width=1\linewidth]{c3.png}
+\caption{Makespans of the SPT schedule with cyclic machne and ramp selection created by the second phase of the proposed algorithm}
+\label{fig:c3}
+\end{figure}
+
+\subsection{Random ordering and selection}
+
+\begin{figure}[H]
+\includegraphics[width=1\linewidth]{c4.png}
+\caption{Makespans of the schedule with random job dispatching and ramp/machine selection created by the second phase of the proposed algorithm}
+\label{fig:c4}
+\end{figure}
+
+\subsection{Original activity execution with no scheduler}
+
+\begin{figure}[H]
+\includegraphics[width=1\linewidth]{c4.png}
+\caption{Makespan of the schedule created at the end of the simulation from activities without usage of the scheduler}
+\label{fig:c4}
+\end{figure}
+
+\begin{figure}[H]
+\includegraphics[width=1\linewidth]{c4.png}
+\caption{No usage of}
+\label{fig:c4}
+\end{figure}
 
 
 table - buffers, idle times, etc. for all 4 of these
 
 
-\subsection{Effect of objectives?}
+\subsection{Effect of objectives}
+gantt charts before and after insertions
 
-\begin{figure}
-    \centering
-    \includegraphics{}
-    \caption{time and reached score + taking the worst score and the best score and compare it in simulation}
-    \label{fig:my_label}
-\end{figure}
+score after and before idle time insertions
+
+    time and reached score + taking the worst score and the best score and compare it in simulation
 
 
-\begin{figure*}
-\begin{multicols}{2}
-    \includegraphics[width=\linewidth]{sc1.jpg}\par 
-    \includegraphics[width=\linewidth]{sc1.jpg}\par
-    \end{multicols}
-\caption{Reality worst score vs reality best score}
-\end{figure*}
+
+Reality worst score vs reality best score
+
 
 \subsection{Experimentation}
 Taking information from simulation -> production uniformly distributed -> stochastic model using average processing time? What is the result?
@@ -785,82 +812,6 @@ Porovnani kdyz treba zvolim average processing time
  
 
 Having a feasible schedule, we know how long it is, and we can tell approximately how much time we have until work hours end. We can take this time a distribute it in between items as idle times. We cannot simply determine where or how big idle times we should insert, because inserting an idle time in between some items may not result in a feasible schedule. We have to run step 2 of the algorithm, job dispatching, again after any insertion of idle times.
-
-
-\label{overlap}
-\begin{algorithm}[H]
-\SetAlgoLined
-\SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
-\Input{$c_i$ - completion time of an item $i$, $c_j$ - completion time of an item $j$, $r_i$ ramp to which item $i$ is assigned, $r_j$ ramp to which an item $j$ is assigned\\}
-\Output{$1$ - Process of unloading items $i$ and $j$ does not overlap, $0$ - Process of unloading items $i$ and $j$ overlaps either at stacker crane, scanner or a conveyor}
-
-$s_i = c_i - s\;$\\
-$s_j = c_j - s\;$\\
-$scc_i = s_i - t_{r_i}\;$\\
-$scc_j = s_j - t_{r_j}\;$\\
-
-$scs_i = scc_i - p_i\;$\\
-$scs_j = scc_j - p_j\;$
-
-\If{$m_i = m_j$}{
-    \If{$scc_i > scs_j \land scc_j > scs_i$}{
-        return $0\;$ \tcc{Processing of an items $i$ and $j$ is overlapping at stacker crane $m_i$}
-    }
-}
-
-\If{$r_i = r_j$}{
-    \If{$c_i  + \theta_i > s_j \land c_j + \theta_j > s_i$}{
-        return $0\;$ \tcc{Processing of an items $i$ and $j$ is overlapping at expedition ramp $r_i$}
-    }
-}
-
-return $1\;$
- \caption{Constraint - noOverlap}
-\end{algorithm}
-
-Alternatively, we can formulate this problem (with single expedition ramp) as a linear program, as follows:\\
-\textbf{Decision variables}
-
-\begin{itemize}
-\item $x_{ij}$: 1 if $job_i$ expedited immediately after $job_j$, 0 otherwise
-\item$c_i$: completion time of $job_i$ on the second stage
-\item$idle_i$: idle time followed after $job_i$ on the second stage
-\item$y_i$: order number of $job_i$ on the second stage
-\item$scc_i$: start time of $job_i$ on the first stage 
-\end{itemize}
-\textbf{Data}
-\begin{itemize}
-\item$p_i$: processing time of $job_i$ on the first stage
-\item$E_i$: set of allowed order numbers on the second stage for $job_i$
-\item$I_i$: set of indexes of jobs scheduled on machine $i$ on the first stage
-\item$M$: represents a large number
-\item$start$: time at which work hours start
-\item$end$: time at which work hours end
-\end{itemize}
-
-\begin{equation}
-\begin{aligned}
-&\text{minimize}
-&&f(\ldots)
-\end{aligned}
-\end{equation}
-\begin{equation}
-\begin{aligned}
-\text{subject to}\\
-& \sum_{i=0}^{n} x_{ij} = 1 &&\\
-& c_{i} - c_{j} + M(1 - x_{ij}) \geq s + idle_{i} && \text{for}\; i,j = 1, \ldots, n\\
-& c_{i} - scc_{i0} = p_{i} + t_i + s + idle_i && \text{for}\; i = 1, \ldots, n\\
-& scc_{i} + p_i < scc_j + M(1 - x_{ij}) && k = 0,\ldots,n, i,j \in I_k\\
-& y_{i} - y_{j} < c_i - c_j + M(1 - x_{ij}) && \text{for}\; i,j = 1, \ldots, n\\
-& y_i \in E_i && \text{for}\; i = 1, \ldots, n\\
-& x_{ij} \in \{0, 1\}  && \text{for}\; i,j = 1, \ldots, n\\ 
-& c_i \geq start && \text{for}\; i = 1, \ldots, n\\
-& c_i \leq end && \text{for}\; i = 1, \ldots, n\\
-& scc_{i} \geq start - p_i && \text{for}\; i = 1, \ldots, n\\
-& idle_i \geq 0 && \text{for}\; i = 1, \ldots, n\\
-\end{aligned}
-\end{equation}
-\\
 
 
 \end{document}
