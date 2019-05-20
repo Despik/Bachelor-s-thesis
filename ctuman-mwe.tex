@@ -708,7 +708,7 @@ phase 4 moves evaluated & 330 steps & 39 steps & 10 steps & 0 steps \\
 \end{center}
 \section{Heuristics comparison}
 
-In this section schedules created from dataset B using different rules and heuristics are presented. For each schedule, we take a look at their utilization of machines by comparing makespan of these schedules, before idle time insertion. To be able to tell how well the machines were utilized. We also show  the approximation of optimal makespan in each figure.  It assumes that throughput of the warehouse is limited only by a scanner and calculates how long does a scanner need to scan all items on the expedition expedition ramp that expects the most items. The calculation of this approximation can be seen in Equation \ref{eq:approx}.
+In this section schedules created from dataset B using different rules and heuristics are presented. For each schedule, we take a look at their utilization of machines by comparing makespan of these schedules (See Figure \ref{fig:c1}), before idle time insertion. To be able to tell how well the machines were utilized. We also show  the approximation of optimal makespan in each figure.  It assumes that throughput of the warehouse is limited only by a scanner and calculates how long does a scanner need to scan all items on the expedition expedition ramp that expects the most items. The calculation of this approximation can be seen in Equation \ref{eq:approx}.
 
 Then we take a look at each schedule individually. Each schedule created by the scheduler is compared to the version of it that was constructed from activities at the end of the simulation.
 
@@ -718,23 +718,55 @@ Then we take a look at each schedule individually. Each schedule created by the 
     \max(s \cdot size_0, \ldots, s \cdot size_r)
 \end{equation}
 
-\subsection{LPT-LJL}
+
 \begin{figure}[H]
-\includegraphics[width=\linewidth]{c1.png}
+\includegraphics[width=\linewidth]{comp1.png}
 \caption{Makespans of the LPT-LJL schedule created by the second phase of the proposed algorithm}
 \label{fig:c1}
 \end{figure}
 
+\subsection{LPT-LJL}
+
+This is the proposed heuristic from Chapter \ref{ch:Proposed solution}.
+
+\subsubsection{Data B1}
 \begin{center}
 \begin{tabular}{ |c|| c | c |} 
 \hline
-attribute/schedule & B1 - LPT-LJL & B1 - scheduled resulted from the simulation & B2 - LPT-LJL & B2 - scheduled resulted from the simulation\\ 
+attribute/schedule & B1 - LPT-LJL & B1 - result\\ 
 \hline
-score(hard/soft) & 0/0 & d & h & g \\
+score(hard/soft) & 0/0 & d\\
 \hline
-scanners max. buffer size reached & 0 & 10 & 0 & 10\\ 
+U & 0/0 & d\\
 \hline
-average length of idle times & 0 & 0 & 0 & 10\\ 
+L & 0/0 & d\\
+\hline
+$\sigma$ & 0/0 & d\\
+\hline
+scanners max. buffer size reached & 0 & 10\\ 
+\hline
+average length of idle times & 0 & 0\\ 
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Data B2}
+\begin{center}
+\begin{tabular}{ |c|| c | c |} 
+\hline
+attribute/schedule & B2 - LPT-LJL & B2 - result\\ 
+\hline
+score(hard/soft) & 0/0 & d\\
+\hline
+U & 0/0 & d\\
+\hline
+L & 0/0 & d\\
+\hline
+$\sigma$ & 0/0 & d\\
+\hline
+scanners max. buffer size reached & 0 & 10\\ 
+\hline
+average length of idle times & 0 & 0\\ 
 \hline
 \end{tabular}
 \end{center}
