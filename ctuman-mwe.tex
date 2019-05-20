@@ -450,7 +450,7 @@ Each scheduled item is associated with an idle time, which follows the arrival o
 
 *odpoved na komentar*
 
-The method that is proposed in this stage is step count hill climbing (SCHC) algorithm presented by Yuri Bykov \cite{yuri}. SCHC is based on hill climbing local search, but instead of finding the most valuable move across all moves, it first evaluates several moves and selects the one that improves the overall score of a schedule the most. The main benefit SCHC has over hill climbing algorithm or other some other local search algorithm is that we can set how many moves are evaluated in one step to regulate performance since job dispatching can be computationally demanding. To properly use SCHC, we have to specify what moves can this method use. 
+The method that is proposed in this stage is step count hill climbing (SCHC) algorithm presented by Yuri Bykov \cite{yuri}. SCHC is based on hill climbing local search, but instead of finding the most valuable move across all moves, it first evaluates several moves and selects the one that improves the overall score of a schedule the most. The main benefit SCHC has over hill climbing algorithm or other some other local search algorithm is that we can set how many moves are evaluated (step count) in one step to regulate performance since job dispatching can be computationally demanding. To properly use SCHC, we have to specify what moves can this method use. 
 
 There are $n$ moves, one for each item. Each move inserts some low amount of idle time (seconds) after arrival to an expedition ramp of an item. A move is part of a move list that is sorted in increasing order based on the size of idle time of an item that is associated with a move. SCHC evaluates several moves in this order and makes the next step; this continues until there are no improving moves to make or in other words, there is no remaining time left to distribute, or all truck expeditions reached their maximum allowed duration.
 
@@ -590,11 +590,12 @@ The following described the details of the implementation the algorithm from Cha
 
 \subsubsection{Truck allocation}
 
-As proposed in Section \ref{sec:truckallocationprop}, the truck allocation is solved using Constraint programming. Specifically, I used Choco open-source java library dedicated to constraint programming \cite{choco}. The library can be used to model the problem in declarative way by stating the set of constraints. The library comes up with many different constraints with state-of-the-art implementations, offers different search algorithms and strategies and also provide multi-thread resolution. Because of this, the scheduler is able to achieve good performance and allows a developer to easily tweak or modify the solving process.
+As proposed in Section \ref{sec:truckallocationprop}, the truck allocation is solved using Constraint programming. Specifically, I used Choco open-source java library dedicated to constraint programming \cite{choco}. The library can be used to model the problem in declarative way by stating the set of constraints. The library comes up with many different constraints with state-of-the-art implementations, offers different search algorithms and strategies and also provide multi-thread resolution. Because of this, the scheduler is able to achieve good performance and allows a developer to easily tweak or modify the solving process. 
 
 \subsubsection{Re-ordering and Idle time insertion}
 
-To use local search in Optaplanner, we need to need to generate moves of local searches as stated in Sections \ref{sec:reordering} and \ref{sec:idletimeinsertion}. Order of moves, search techniques and parameters for different local searches, like for example temperature of simulated-annealing, can be all setup in config file of the Optaplanner's solver.
+To use local search in Optaplanner, we need to model the problem by specifying domains, variables and the calculation of the score. The score consists of two long values, one for hard constraints and the other for soft constraint. Domains, variables and hard constraint score corresponds to the problem formulation from Subsection \ref{subsec:expeditiondispatching}, where for each violated constraint the hard score is subtracted by one. The soft score calculation is the same as the score calculation from Section \ref{sec:score}.
+Another thing that is needed, is to generate moves of local searches as stated in Sections \ref{sec:reordering} and \ref{sec:idletimeinsertion}. Order of moves, search techniques and parameters for different local searches, like for example temperature of simulated-annealing, can be all setup in configuration file of the Optaplanner's solver.
 
 The example of the SCHC configuration is shown in following listing.
 
@@ -606,36 +607,36 @@ The example of the SCHC configuration is shown in following listing.
 \begin{lstlisting}[language=XML, caption=Optaplanner local search configuration]
 <?xml version="1.0" encoding="UTF-8"?>
 <solver>
-    <environmentMode>FULL_ASSERT</environmentMode>
-    <scanAnnotatedClasses/>
+ <environmentMode>FULL_ASSERT</environmentMode>
+ <scanAnnotatedClasses/>
 
-    <scoreDirectorFactory>
-     <easyScoreCalculatorClass>
-      cz.kalinja6.scheduler.ScoreCalculator
-     </easyScoreCalculatorClass>
-    </scoreDirectorFactory>
+ <scoreDirectorFactory>
+  <easyScoreCalculatorClass>
+   cz.kalinja6.scheduler.ScoreCalculator
+  </easyScoreCalculatorClass>
+ </scoreDirectorFactory>
 
-    <localSearch>
-     <unionMoveSelector>
-      <moveListFactory>
-       <moveListFactoryClass>
-        cz.kalinja6.scheduler.InsertIdleTimeMoveFactory
-       </moveListFactoryClass>
-      </moveListFactory>
-       <selectionOrder>ORIGINAL</selectionOrder>
-     </unionMoveSelector>
-      <acceptor>
-       <stepCountingHillClimbingSize>
-        400
-       </stepCountingHillClimbingSize>
-      </acceptor>
-       <forager>
-        <acceptedCountLimit>1</acceptedCountLimit>
-       </forager>
-    </localSearch>
-    <termination>
-     <secondsSpentLimit>30</secondsSpentLimit>
-    </termination>
+ <localSearch>
+  <unionMoveSelector>
+   <moveListFactory>
+    <moveListFactoryClass>
+     cz.kalinja6.scheduler.InsertIdleTimeMoveFactory
+    </moveListFactoryClass>
+   </moveListFactory>
+   <selectionOrder>ORIGINAL</selectionOrder>
+  </unionMoveSelector>
+  <acceptor>
+   <stepCountingHillClimbingSize>
+    400
+   </stepCountingHillClimbingSize>
+  </acceptor>
+  <forager>
+   <acceptedCountLimit>1</acceptedCountLimit>
+  </forager>
+ </localSearch>
+ <termination>
+  <secondsSpentLimit>30</secondsSpentLimit>
+ </termination>
 </solver>
 \end{lstlisting}
 
@@ -646,16 +647,134 @@ The example of the SCHC configuration is shown in following listing.
 
 \chapter{Evaluation}
 \label{ch:Evaluation}
+
+In this chapter I will introduce datasets for evaluation and present comparison of different heuristics and local search techniques.
+
+\section{Datasets}
+
+All of the following layout configurations and stacker crane attributes are based on real-world automated warehouse design. Expedition and production input data are based on anonymized real-world data from provided from a client for a project involving the simulator.
+
+
+\subsection{Dataset A}
+\label{subsec:dataA}
+Dataset A is used in performance evaluation. The data (A1, A2, A3 and A4) will be used to compare performance of expeditions with different sizes. These expeditions have similar number of trucks, requested item types and distribution of types.\\
+
+Common layout
+\begin{itemize}
+    \item Number of aisles: 48
+    \item ...
+\end{itemize}
+
+Common stacker crane attributes
+\begin{itemize}
+    \item Vertical speed: ...
+    \item ...
+\end{itemize}
+
+
+\begin{center}
+\begin{tabular}{ |c| c c c c|} 
+\hline
+attribute/name & A1 & A2 & A3 & A4\\ 
+\hline
+number of requests & 1016 & 4157 & 8284 & 16568 \\
+\hline
+number of trucks & 10 & 10 & 10 & 10 \\ 
+\hline
+number of types & 84 & 101 & 101 & 101 \\ 
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Dataset B}
+\label{seubsec:B}
+Dataset B is used for comparison of different heuristics and local search algorithms... same as A2 a konfigurace robota je taky ok, ale layout je jinaci (mensi pocet ramp)
+
 \section{Performance}
-\section{Scenarios}
-Quickly summarize data 
+
+In this section we simply show how long does it take to create the schedule from input files A1, A2, A3 and A4 from dataset A (See Subsection \ref{subsec:dataA}). We take a look at phase two, three and four since the first phase have insignificant overall effect on execution time. For phases three and four, we measure the number of evaluated moves in half a minute. The following table shows the results.
+
+\begin{center}
+\begin{tabular}{ |c| c c c c|} 
+\hline
+phase/data & A1 & A2 & A3 & A4\\ 
+\hline
+phase 2, no ls evaluated & 371ms & 1673ms & 4623ms & 16820ms \\
+\hline
+phase 3 moves evaluated & 417 steps & 39 steps & 12 steps & 0 steps \\ 
+\hline
+phase 4 moves evaluated & 330 steps & 39 steps & 10 steps & 0 steps \\ 
+\hline
+\end{tabular}
+\end{center}
 \section{Comparison}
-\subsection{Comparison of plan and behavior in simulation}
-Comparing different version (LS, no LS, heuristic 1, heuristic 2, ...) of algorithm too.
+
+LPT + proposed - only phase to phase 2, 1. compare to optimal makespan, 2. compare insertion real and planned
+SPT + proposed - ..., 
+LPT + cyclic ramp \& machine? selection
+SPT + cyclic ramp \& machine? selection - ...
+maybe just random?
+
+\begin{figure*}
+\begin{multicols}{2}
+    \includegraphics[width=\linewidth]{sc1.jpg}\par 
+    \includegraphics[width=\linewidth]{sc1.jpg}\par
+    \end{multicols}
+\begin{multicols}{2}
+    \includegraphics[width=\linewidth]{sc1.jpg}\par 
+    \includegraphics[width=\linewidth]{sc1.jpg}\par
+    \end{multicols}
+\caption{Phase 2 vs optimal, LPT + proposed, SPT + ...}
+\end{figure*}
+
+\begin{figure*}
+\begin{multicols}{2}
+    \includegraphics[width=\linewidth]{sc1.jpg}\par 
+    \includegraphics[width=\linewidth]{sc1.jpg}\par
+    \end{multicols}
+\begin{multicols}{2}
+    \includegraphics[width=\linewidth]{sc1.jpg}\par 
+    \includegraphics[width=\linewidth]{sc1.jpg}\par
+    \end{multicols}
+\begin{multicols}{2}
+    \includegraphics[width=\linewidth]{sc1.jpg}\par 
+    \includegraphics[width=\linewidth]{sc1.jpg}\par
+    \end{multicols}
+\begin{multicols}{2}
+    \includegraphics[width=\linewidth]{sc1.jpg}\par 
+    \includegraphics[width=\linewidth]{sc1.jpg}\par
+    \end{multicols}
+\caption{Comparison of time difference.}
+\end{figure*}
+
+
+table - buffers, idle times, etc. for all 4 of these
+
+
 \subsection{Effect of objectives?}
-Mainly significance of idle times (at scanner or machines)
+
+\begin{figure}
+    \centering
+    \includegraphics{}
+    \caption{time and reached score + taking the worst score and the best score and compare it in simulation}
+    \label{fig:my_label}
+\end{figure}
+
+
+\begin{figure*}
+\begin{multicols}{2}
+    \includegraphics[width=\linewidth]{sc1.jpg}\par 
+    \includegraphics[width=\linewidth]{sc1.jpg}\par
+    \end{multicols}
+\caption{Reality worst score vs reality best score}
+\end{figure*}
+
+\subsection{Experimentation}
+Taking information from simulation -> production uniformly distributed -> stochastic model using average processing time? What is the result?
+Porovnani kdyz treba zvolim average processing time
 \chapter{Conclusion}
 
+\section{Future work}
 \bibliographystyle{plain}
 \bibliography{refs.bib}
 
