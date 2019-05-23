@@ -40,7 +40,7 @@ V Praze, \ctufield{day}.~\monthinlanguage{second}~\ctufield{year}
 
 \end{declaration}
 \begin{abstract-english}
-This thesis deals with the optimization problem of daily expedition scheduling in an automated warehouse with a focus on robustness and satisfaction of given requirements. The problem consists of a truck allocation to expedition ramps and scheduling of unloading of predetermined products. We introduce related scheduling problems and their solutions. Our method for schedule evaluation is then presented together with proposed heuristic construction method in combination with local search techniques. Combination of these methods is then proposed for construction of the expedition schedule. Finally, the proposed method is implemented in the provided simulation tool and constructed schedule is evaluated based on results from the simulation. Results from the simulation show that proposed method generates a schedule which satisfy given requirements and is relatively robust to delays.
+This thesis deals with the optimization problem of daily expedition scheduling in an automated warehouse with a focus on robustness and satisfaction of given requirements. The problem consists of a truck allocation to expedition ramps and scheduling of unloading of predetermined products. We introduce related scheduling problems and their solutions. Our method for schedule evaluation is then presented together with proposed heuristic construction method in combination with local search techniques. Combination of these methods is then proposed for construction of the expedition schedule. Finally, the proposed method is implemented in the provided simulation tool, and constructed schedule is evaluated based on results from the simulation. Results from the simulation show that the proposed method generates a schedule which satisfies given requirements and is relatively robust to delays.
 
 \end{abstract-english}
 
@@ -69,6 +69,7 @@ The automated warehouse is part of a factory. The factory stores products to the
 Firstly, we describe production together with a layout of the automated warehouse and secondly, we describe the expedition process.
 
 \subsection{Production} 
+\label{subsec:production}
 The factory is running 24 hours a day and produces up to thousands of items throughout a whole day. The exact amount of produced items is unknown since not all items pass quality control. The time of item arrival at the warehouse is also unknown because items can be delayed for unknown reasons.
 
 Items come in hundreds of different types, which may differ in size, material, or in other properties, which are not important for this thesis. Since the warehouse is automated, items must have suitable weight and size to be handled by a stacker crane and to be stored in high-bay racks, like the ones shown in Figure \ref{fig:hb}. Examples of such items are tires or pallets of different sodas. Produced items are directly put one-by-one on the conveyor leading to the warehouse, where an item is pushed off the conveyor to the production buffer of one of the aisles.
@@ -80,6 +81,7 @@ Stacker cranes operate automatically and can either store an item from productio
 If stacker crane is requested to unload an item, it moves to the position of an item, grabs it and moves to the beginning of an aisle, where it puts the item on the conveyor leading to an expedition ramp. In case of an item arriving from production to an aisle's production buffer, stacker crane should retrieve this item from the production buffer and store in a free position in the aisle. If any production buffer overflows, all the production would have to be stopped, which can lead to serious financial losses. For that reason, stacker cranes prioritize storing an item over unloading. It means that as soon as a stacker crane finishes an operation in progress, it stores an item from production (if it is available at the buffer) even if it means delaying scheduled unloading.
 
 \subsection{Expedition}
+\label{subsec:expedition}
 The expedition is spanned over a part of one day; we will further refer to this part as working hours. We are given information about when the working hours start and end. During the expedition, a truck can arrive at an expedition ramp at a scheduled time. Only one truck can be loaded at a time at each expedition ramp. There is also reserved time after which the next truck can arrive. Every truck requests a certain number of items of different types and order of these types in which they should be loaded into the truck for practical reasons. Which specific items will be expedited is known in advance and is expected that these items are distributed uniformly across all aisles. 
 
 Before each item reaches an expedition ramp, it arrives at a conveyor junction and then proceeds to the expedition ramp's scanner, where it needs to be scanned. A scanner is located at the end of the conveyor before each expedition ramp. 
@@ -91,7 +93,7 @@ We also simplify our problem and assume that workers at the loading ramp can alw
 On top of all these specifications, it is expected that the expedition should not last longer than the working hours. Additionally, the duration of a truck expedition should not take too much time; there is a constraint on how long the truck expedition should be. Parameters specifying these requests and the importance of these requests is something that a client should specify, and it has to be considered during the construction of a schedule.
 
 \subsubsection{Warehouse parameters}
-
+\label{sec:availableinformation}
 Several basic parameters were provided for the given automated warehouse. These parameters include horizontal and vertical speeds and accelerations of stacker cranes, dimensions of a warehouse, speed and length of conveyors, duration of scanning an item, duration of grabbing an item from a conveyor, duration of putting an item on a conveyor and exact location of each item stored in the warehouse. For the expedition, we know count, types, and order at which items should be loaded for each truck. 
 
 \begin{figure}
@@ -104,7 +106,7 @@ Several basic parameters were provided for the given automated warehouse. These 
 
 The goal of this thesis is to implement a scheduler that can produce a schedule in a reasonable time by assigning trucks planned for a day to expedition ramps, determining their order and the order at which items will be expedited and finally determine the specific time at which stacker cranes should start unloading each item. Since there is no or uncertain information about item production, we cannot incorporate production handling in our schedule, but knowing that production handling can delay unloading of an item, we can try to minimize the effect that production handling has on the schedule. To properly evaluate the schedule, it is integrated into simulation so that the created schedule can be observed in settings with production and evaluated based on it. 
 
-With a combination of the schedule and the simulation tool, we are also able to get data about the capabilities of the warehouse itself, which is valuable information when designing an automated warehouse. Integration of the scheduler to the simulation tool also enriches the simulation tool and can be used in future projects.
+With a combination of the schedule and the simulation tool, we are also able to get data about the capabilities of the warehouse itself, which is valuable information when designing an automated warehouse \cite{review}. Integration of the scheduler to the simulation tool also enriches the simulation tool and can be used in future projects.
 
 
 \section{Notation and terminology}
@@ -117,7 +119,7 @@ With a combination of the schedule and the simulation tool, we are also able to 
 
 \noindent \textbf{Scanning interval} ($s$) A time needed for a scanner to process an item.
 
-\noindent \textbf{Traverse duration} ($t_ij$) A time needed for an item $i$ to get to a scanner from tis aisle by a conveyor.
+\noindent \textbf{Traverse duration} ($t_ij$) A time needed for an item $i$ to get to a scanner from this aisle by a conveyor.
 
 \noindent \textbf{Completion time} ($c_i$) A time at which a scanner finishes scanning an item $i$.
 
@@ -139,7 +141,8 @@ With a combination of the schedule and the simulation tool, we are also able to 
 
 \noindent \textbf{Stacker crane start time} ($scs_i$) A time at which stacker crane starts unloading an item from the warehouse.
 
-\noindent \textbf{Makespan} The duration of a schedule
+\noindent \textbf{Duration of truck expedition} ($d_i$)
+
 
 \chapter{Problem statement}
 
@@ -147,7 +150,7 @@ With a combination of the schedule and the simulation tool, we are also able to 
  
  The second problem, item dispatching, occurs after the truck allocation, and it deals with determining which items should meet which requests from trucks and the assignment of completion times of item unloading. Since machines are predetermined, there is no need to select a machine which unloads an item. An item is already associated with a machine.
  
-Both of these problems are described as machine models in the following sections, which are used in scheduling literature (See \cite{pinedo} or \cite{bucker} for an overview of machine models). More formal formulations for both of these problems are included in the following sections.
+Both of these problems are described as machine models in the following sections, which are used in scheduling literature (See \cite{pinedo} or \cite{brucker} for an overview of machine models). More formal formulations for both of these problems are included in the following sections.
  
  \section{Trucks allocation}
  \label{subsec:truckallocation}
@@ -292,7 +295,7 @@ It consists of four different phases.
 
 The proposed method does not try to utilize stacker cranes optimally. Finding an optimal schedule requires lots of computational power. Several MIP formulations have been proposed, and various branch and bound approaches have been developed for these problems, but still, only problems with around 50 jobs can be solved in reasonable time \cite{pinedo}. Furthermore, because of production handling, the original schedule may be disrupted, and the value of finding an optimal schedule will be lost. 
 
-That being said, in the first phase algorithm optimally distributes trucks to ramps and thus solves the problem of truck allocation (Subsection \ref{subsec:truckallocation}). In the second phase, however, heuristic construction is used to get a good schedule by solving item dispatching problem (Subsection \ref{subsec:itemdispatching}) in a relatively short time. The third phase is used to further improve on assignments, which were made in the second phase using local search algorithms. In the last phase, we insert idle times in between completion times $c_i$ to achieve good robustness to delays caused by prioritized production handling \cite{pinedo}. In Figure \ref{fig:algo}, we can see the steps except re-ordering illustrated for better understanding.
+That being said, in the first phase algorithm optimally distributes trucks to ramps and thus solves the problem of truck allocation (Subsection \ref{subsec:truckallocation}). In the second phase, however, heuristic construction is used to get a good schedule by solving item dispatching problem (Subsection \ref{sec:expeditiondispatching}) in a relatively short time. The third phase is used to further improve on assignments, which were made in the second phase using local search algorithms. In the last phase, we insert idle times in between completion times $c_i$ to achieve good robustness to delays caused by prioritized production handling \cite{pinedo}. In Figure \ref{fig:algo}, we can see the steps except re-ordering illustrated for better understanding.
 
 \begin{figure}[H]
 \includegraphics[width=1.0\linewidth]{algo.jpg}
@@ -303,7 +306,7 @@ That being said, in the first phase algorithm optimally distributes trucks to ra
 \section{Score of the schedule}
 \label{sec:score}
 
-To be able to compare different feasible schedules (See Subsection \ref{subsec:expeditiondispatching}), we introduce a score of a schedule. 
+To be able to compare different feasible schedules (See Subsection \ref{sec:expeditiondispatching}), we introduce a score of a schedule. 
 
 We formulate it as a sum of the weighted sub-objectives. The higher the score is, the better the schedule is.
 
@@ -332,7 +335,7 @@ Maximizing the sum of idle times increases the robustness of the schedule (See \
 \item \textbf{Constraint duration of truck expedition} $(U)$
 \begin{equation} 
    U = \begin{cases}
-        1 \text{ if } t*_i - t*_i > maxdur_i\\
+        1 \text{ if } c_i^{'} - c_i^{'} > \text{expedition duration of truck } i\\
         \text{0 otherwise}\\
        \end{cases}
 \end{equation}
@@ -368,7 +371,7 @@ The priorities should be specified by a client or assuming that trucks with bigg
 \section{Job dispatching}
 \label{sec:jobdispatching}
 
-In this phase, we solve the problem from Subsection \ref{subsec:itemdispatching} and thus create a feasible schedule.
+In this phase, we solve the problem from Subsection \ref{sec:expeditiondispatching} and thus create a feasible schedule.
 To obtain a feasible schedule, a constructive heuristic method is proposed. This method assigns values to variables in a way that after assigning value to every variable, we get a feasible solution without a need to backtrack.
 
 In this phase, we also need to take into consideration some of the objectives. If machines are not utilized properly by the proposed method, the duration of the schedule might be greater than the duration of working hours or the breakdown of a machine could have worse consequences. Also, items should arrive at different expedition ramps in similar rate to ensure that truck expedition does not take significantly longer than expected.
@@ -402,7 +405,7 @@ In this phase, we also need to take into consideration some of the objectives. I
 \caption{Job dispatching}
 \end{algorithm}
 
-The algorithm starts by putting items from the warehouse and times from domains $C_i$ to an ordered queue $items$ (See Subsubsection \ref{subsubsec:itemsordering}). Then, the algorithm selects a $ramp$ and cycles through $machines$ (stacker cranes) in established order until any $machine$ has an item with the same type as a request next in order on a $ramp$. Then it selects the shortest completion time from domain $C_i$ of an unload action of this item, that satisfy constraints from Subsection \ref{subsec:itemdispatching}. 
+The algorithm starts by putting items from the warehouse and times from domains $C_i$ to an ordered queue $items$ (See Subsubsection \ref{subsubsec:itemsordering}). Then, the algorithm selects a $ramp$ and cycles through $machines$ (stacker cranes) in established order until any $machine$ has an item with the same type as a request next in order on a $ramp$. Then it selects the shortest completion time from domain $C_i$ of an unload action of this item, that satisfy constraints from Subsection \ref{sec:expeditiondispatching}. 
 
 
 \subsubsection{Machine and ramp selection heuristic }
@@ -421,18 +424,18 @@ In Chapter \ref{ch:Evaluation} we also test SPT dispatching rule to confirm that
 We will refer to schedules created using the Job dispatching algorithm by name combination of item ordering and machine/ramp selection heuristic — for example, SPT-LJL or LPT-cyclic.
 
 \section{Re-ordering}
-
-This phase is optional, and its goal is to improve the schedule by reordering items that were ordered using LPT heuristics in the second phase (See Subsubsection \ref{subsubsec:itemsordering}). The heuristics used in the second phase should create a good schedule, but it does not guarantee that the utilization of machines is optimal. This phase tries to bring it closer to the optimum.
+\label{sec:reordering}
+This phase is optional, and its goal is to improve the schedule by re-ordering items that were ordered using LPT heuristics in the second phase (See Subsubsection \ref{subsubsec:itemsordering}). The heuristics used in the second phase should create a good schedule, but it does not guarantee that the utilization of machines is optimal. This phase tries to bring it closer to the optimum.
 
 The method that is proposed here is a local search algorithm (specific algorithms are compared in Chapter \ref{ch:Evaluation}. A move of a local search algorithm swaps order (See Subsubsection \ref{subsubsec:itemsordering}) of two items. After positions are swapped, the job dispatching algorithm must be run again, but items should be now sorted by their assigned position $pos_i$ and not by item ordering proposed in Subsubsection \ref{subsubsec:itemsordering}.
 
 If we have a feasible schedule, the local search algorithm is a good alternative to the CP approach, or variants of a branch and bound, which do not perform well in problems of this scale. The local search ends after a certain amount of time or has no neighbor to select and returns the best schedule that was found so far. This implies that step of the algorithm is optional, and in the worst case, we get the schedule from the second phase.
 
 \section{Idle time insertion}
-
+\label{sec:idletimeinsertion}
 The goal of this phase is to take advantage of the remaining time of working hours, assuming there is remaining time, spread the expedition throughout the working hours and as a result create a schedule that is more robust to delays. 
 
-Since order at which items are expedited is one of the requirements (subsection \ref{expedition}), inserting idle times in between loading (or completion times) is crucial for minimizing number of errors in ordering due to delays caused by prioritized production handling. It also reduces the chance of a scanner's buffer to overflow.
+Since order at which items are expedited is one of the requirements (subsection \ref{subsec:expedition}), inserting idle times in between loading (or completion times) is crucial for minimizing number of errors in ordering due to delays caused by prioritized production handling. It also reduces the chance of a scanner's buffer to overflow.
 
 
 We associate each item with an idle time, which follows the arrival of the item to an expedition ramp. Other items cannot be scheduled to arrive after an item $i$ for its duration of idle time $\theta_i$.
@@ -529,11 +532,11 @@ The \emph{Activity execution} is triggered after activities creation or an activ
 
 \subsection{Production and expedition handling in the simulator}
 
-First off, the input of the simulator is config file describing the layout of the warehouse and stacker cranes parameters, CSV file with item descriptors and time stamps representing the production schedule and CSV file with an item type, quantities, and truck id representing an expedition to be scheduled. To be clear what information is available, see Section \ref{subsubsubsec:availableinformation}.
+First off, the input of the simulator is config file describing the layout of the warehouse and stacker cranes parameters, CSV file with item descriptors and time stamps representing the production schedule and CSV file with an item type, quantities, and truck id representing an expedition to be scheduled. To be clear what information is available, see Section \ref{sec:availableinformation}.
 
 Knowing what activities are and that we have files specifying production schedule and expedition demand, we describe how are these activities created and executed.
 
-Starting with production, the schedule for the production is created at the beginning of a day in the simulation. Entries from the production input file are parsed, and $PRODUCTION\_GENERATED$ events put in the event queue. These events signalize that an item is produced and is on it's way to the automated warehouse. The dispatcher handles these events and decides to what aisle will the produced item be delivered and schedules a new event, $ITEM\_ARRIVAL$, for the time it arrives at the assigned aisle. When the dispatcher handles $ITEM\_ARRIVAL$ event, it creates SCS activity and puts it into the activity queue. How are activities executed from the activity queue is explained in Section \ref{subsubsec:activityqueue}.
+Starting with production, the schedule for the production is created at the beginning of a day in the simulation. Entries from the production input file are parsed, and $PRODUCTION\_GENERATED$ events put in the event queue. These events signalize that an item is produced and is on it's way to the automated warehouse. The dispatcher handles these events and decides to what aisle will the produced item be delivered and schedules a new event, $ITEM\_ARRIVAL$, for the time it arrives at the assigned aisle. When the dispatcher handles $ITEM\_ARRIVAL$ event, it creates SCS activity and puts it into the activity queue. How are activities executed from the activity queue is explained in Section \ref{subsec:activityqueue}.
 
 The expedition handling works similarly, but it also has some major differences. The expedition input file is also parsed at the beginning of a day in the simulation. Then one event, $TRUCK\_ARRIVAL$, per expedition ramp is created (if there are more trucks planned for that day than expedition ramps) and they are scheduled for the beginning of the work hours. 
 
@@ -591,7 +594,7 @@ As proposed in Section \ref{sec:truckallocationprop}, truck allocation is solved
 
 \subsubsection{Re-ordering and Idle time insertion}
 
-To use local search in Optaplanner, we need to model the problem by specifying domains, variables, and the calculation of the score. The score consists of two long values, one for hard constraints and the other for soft constraint. Domains, variables, and hard constraint score correspond to the problem formulation from Subsection \ref{subsec:expeditiondispatching}, where for each violated constraint the hard score is subtracted by one. The soft score calculation is the same as the score calculation from Section \ref{sec:score}.
+To use local search in Optaplanner, we need to model the problem by specifying domains, variables, and the calculation of the score. The score consists of two long values, one for hard constraints and the other for soft constraint. Domains, variables, and hard constraint score correspond to the problem formulation from Subsection \ref{sec:expeditiondispatching}, where for each violated constraint the hard score is subtracted by one. The soft score calculation is the same as the score calculation from Section \ref{sec:score}.
 Another thing that is needed is to generate moves of local searches, as stated in Sections \ref{sec:reordering} and \ref{sec:idletimeinsertion}. Order of moves, search techniques and parameters for different local searches, like for example temperature of simulated-annealing, can be all setup in the configuration file of the Optaplanner's solver.
 
 The example of the HCML configuration is shown in the following listing.
@@ -638,6 +641,7 @@ In this chapter, I will introduce datasets for evaluation, and present compariso
 
 Different configurations and input data are used to show examples that properly represent the results in this chapter. Layout and stacker crane configurations are based on real-world automated warehouse design. Expedition and production input data are also based on anonymized real-world data from provided by a client for a project involving the simulator.
 
+\section{Datasets}
 Overview of some of the input data and configurations and be found in following subsections. Details of used configurations and overviews of all input data can be found in Appendix A. For each following section in this chapter; there are more examples of results in other appendices. Those appendices are mentioned in corresponding sections.
 
 
@@ -663,10 +667,26 @@ number of types & 84 & 101 & 101 & 101 \\
 
 
 
-\subsection{Layouts B1 and B2}
+\subsection{Layouts B1-B4}
 \label{subsec:B}
 
-Layouts B1 and B2 are used for comparison of different heuristics. We compare heuristics on two different layouts because some of the heuristics perform differently if there is a single or several expedition ramps. Layout B1 have three expeditions ramps and B2 one. 
+Layouts B1 to B4 are used for comparison of different heuristics. We compare heuristics on these different layouts because some of the heuristics perform differently if there is a single or several expedition ramps. Also if the throughput of the warehouse is limited by stacker cranes and not scanner, we are unable to properly approximate optimal makespan. More on that in Section \ref{sec:heuristiccomparison}. We briefly describe layouts B1 to B4 in Table \ref{tab:bees}. 
+
+
+\begin{table}[H]
+\begin{tabular}{ l l } 
+\hline
+ Layout & Description\\ 
+\hline
+B1 & Has three expedition ramps and 48 stacker cranes.\\
+B2 & Has only one expedition ramps and 48 stacker cranes.\\
+B3 & Has three expedition ramps and 20 stacker cranes.\\
+B4 & Has only one expedition ramps and 62 stacker cranes.\\
+\hline
+\end{tabular}
+\caption{Description of layout configurations.} \label{tab:bees}
+\end{table}
+
 
 Detailed layout and stacker crane configurations can be found in Appendix A.
 
@@ -691,10 +711,10 @@ phase 4 moves evaluated & 330 steps & 39 steps & 10 steps & 2 steps \\
 \caption{Performance evaluation of schedule creation.} \label{tab:perform}
 \end{table}
 
-In Table \ref{tab:perform}, we see that we are not able to evaluate much re-ordering moves in a 30-second window. We show how valuable applying re-ordering might in Subsection \ref{subsubsec:reordering}. The same is shown for idle time insertion in Subsection \ref{subsubsec:idletimeinsertion}. In phase four, we can still distribute a lot of idle times using a method proposed at the end of the Section \ref{sec:idletiminsertion} by move or several different moves which uniformly distribute idle time to all items in a single move. 
+In Table \ref{tab:perform}, we see that we are not able to evaluate much re-ordering moves in a 30-second window. We show how valuable applying re-ordering might in Subsection \ref{sec:reordering}. The same is shown for idle time insertion in Section \ref{sec:idletimeinsertion}. In phase four, we can still distribute a lot of idle times using a method proposed at the end of the Section \ref{sec:idletimeinsertion} by move or several different moves which uniformly distribute idle time to all items in a single move. 
 
 \section{Heuristics comparison}
-
+\label{sec:heuristiccomparison}
 Schedules are created using different rules and heuristics. For each schedule, we take a look at their utilization of machines by comparing the makespan of schedules created by phase two of the algorithm. We can see makespan comparisons in Figure \ref{fig:c1}. 
 
 \begin{figure}[H]
@@ -711,31 +731,31 @@ To be able to tell how well the machines were utilized, we also show the approxi
 \end{equation}
 
 
-Showing results on layouts B1 and B2 in Figure \ref{fig:c1}, we can tell that selection heuristic can play a big role in utilization, especially if there are several ramps. LPT-cyclic heuristic can match LPT-LJL and SPT-LJL if there is a single ramp. LPT-LJL heuristic results in the best utilization in both layouts, although in comparison to SPT-LJL, the difference is negligible in this example.
+From results depicted in Figure \ref{fig:c1}, we can tell that selection heuristic can play a big role in utilization, especially if there are several ramps. LPT-cyclic heuristic can match LPT-LJL and SPT-LJL if there is a single ramp. LPT-LJL heuristic results in the best utilization in both layouts, although in comparison to SPT-LJL, the difference is negligible in this example.
+
+We can see that for dataset A3/B3 the difference between the makespan approximation and other heuristic is quite big. For this dataset the number of available stacker crane is much lower than in other datasets. Because of that a scanner is no longer the limiter of throughput of the warehouse and Equation \ref{eq:approx} is not suitable for makespan approximation. In average,  the most utilizing heuristic, LPT-LJL, has makespan 17\% bigger than the makespan approximation excluding datasets with layout B3. For comparison makespan of SPT-LJL, random and LPT-cyclic heuristics are in average 21\%, 108\% and 85\% higher than makespan approximation respectively.
 
 More examples can be found in Appendix B.
 
-\subsection{Effects of reordering and idle time insertion}
+\subsection{Effects of re-ordering and idle time insertion}
 
-We will now take a look at the effect of phases three (Section \ref{subsec:propreordering}) and fourth (Section \ref{subsubsec:idletimeinsertions}) of the proposed algorithm. We remind again that in the third phase, we use local search algorithms to improve the utilization of stacker cranes further. The fourth phase then inserts idle times between item arrivals at expedition ramps. It is expected that doing that; we will prevent some items from arriving at the expedition in the wrong order. Also, by inserting these idle times, it will make the final schedule more robust to scanner buffer overflows.
+We will now take a look at the effect of phases three (Section \ref{sec:reordering}) and fourth (Section \ref{subsubsec:idletimeinsertions}) of the proposed algorithm. We remind again that in the third phase, we use local search algorithms to improve the utilization of stacker cranes further. The fourth phase then inserts idle times between item arrivals at expedition ramps. It is expected that doing that; we will prevent some items from arriving at the expedition in the wrong order. Also, by inserting these idle times, it will make the final schedule more robust to scanner buffer overflows.
 
-\subsubsection{Reordering}
+\subsubsection{Re-ordering}
 \label{subsubsec:reordering}
-We will take a look at the third phase, reordering. On top of comparing schedules created in the second phase to schedules from the third phase, we will also compare makespan improvements for several different local search algorithms.
+We will take a look at the third phase, re-ordering. On top of comparing schedules created in the second phase to schedules from the third phase, we will also compare makespan improvements for several different local search algorithms.
 
 Following Figure \ref{fig:reor1} shows makespans of LPT-LJL schedule, schedules after re-ordering using tabu, simulated-annealing, and hill climbing search for a minute.
 
 \begin{figure}[H]
 \includegraphics[width=1\linewidth]{reor1.png}
-\caption{Comparison of schedule's makespans before and after applying reordering using different local search algorithms. The figure was generated from data A4/B1}
+\caption{Comparison of schedule's makespans before and after applying re-ordering using different local search algorithms. The figure was generated from data A4/B1}
 \label{fig:reor1}
 \end{figure}
 
-We can see that for proposed heuristic LPT-LJL reordering has no effect in this case, it also has minimal impact on SPT-LJL heuristics. The more significant effect of reordering can be observed in a case, where no heuristics are applied, and makespan is then significantly reduced. More examples can be found in Appendix B and they have shown similar results.
+We can see that for proposed heuristic LPT-LJL re-ordering has no effect in this case, it also has minimal impact on SPT-LJL heuristics. The more significant effect of reordering can be observed in a case, where no heuristics are applied, and makespan is then significantly reduced. More examples can be found in Appendix B and they have shown similar results.
 
-Reordering is an optional phase of the algorithm and based on the results it should be only used if there is no requirement on the overall speed of the algorithm or we get new requirements from a client. 
-
-More examples can be found in Appendix C.
+Re-ordering is an optional phase of the algorithm and based on the results it should be only used if there is no requirement on the overall speed of the algorithm or we get new requirements from a client. 
 
 \subsubsection{Idle time insertions}
 \label{subsubsec:idletimeinsertions}
@@ -782,13 +802,13 @@ First, two columns of the table show that without insertion times the expected d
 
 In this thesis, we implemented a scheduler suitable for the specific automated warehouse and its environment. 
 The original problem was split into a truck allocation problem and the flexible flow line scheduling problem.
-The first problem of assigning trucks to ramps was straightforward and was solved using constraint programming. Constraint programming is seemingly the most popular method for optimizing NP-hard scheduling problems, but it requires an excessive amount of computational resources to solve real-world scheduling problems, where number of jobs is often in thousands. For this reason, we proposed a heuristic construction algorithm, which can create a feasible schedule quickly. We improved its utilization of machines by incorporating dispatching rules and heuristics based on the special cases of the FFL problem.  To further improve the utilization of machines, we introduced local search methods to swap selected scheduled items and potentially correct heuristics shortcomings. Lastly, we used local search methods again, to insert idle times in between item arrivals to expedition ramps.
+The first problem of assigning trucks to ramps was straightforward and was solved using constraint programming. Constraint programming is seemingly the most popular method for optimizing NP-hard scheduling problems, but it requires an excessive amount of computational resources to solve real-world scheduling problems, where number of jobs is often in thousands. For this reason, we proposed a heuristic construction algorithm, which can create a feasible schedule quickly. We improved its utilization of machines by incorporating dispatching rules and heuristics based on the special cases of the FFL problem. To further improve the utilization of machines, we introduced local search methods to swap selected scheduled items and potentially correct heuristics shortcomings. Lastly, we used local search methods again, to insert idle times in between item arrivals to expedition ramps.
 
-The proposed method with all of its steps was implemented and integrated into the simulator, where the scheduler could be properly tested. In the implementation two open-source constraint programming libraries were used, Choco and Optaplanner, to keep the scheduler easily modifiable and maintainable.
+The proposed method with all of its steps was implemented and integrated into the simulator, where the scheduler could be properly tested. We used two open-source constraint programming libraries, Choco and Optaplanner, to keep the scheduler easily modifiable and maintainable.
 
-Results have shown that proposed heuristics LPT-LJL and SPT-LJL utilize machines quite well, to the point where further improvements of utilization by re-ordering was computationally heavy, and improvement was negligible. The idle time insertion, on the other hand, proved to be very useful in improving the schedule's robustness. 
+Results have shown that proposed heuristic LPT-LJL utilize machines to 117\% of the optimal makespan approximation. At that point where improvements of utilization by re-ordering was computationally heavy, and improvement was negligible. Other heuristics utilized machines to 121\%, 208\% and 185\% of the optimal makespan approximation respectively. The idle time insertion proved to be very useful in improving the schedule's robustness. Schedules with idle times had zero or in average three times less items arrived in a wrong order compared to schedules without idle times. Also we have shown that schedules without idle times 43\% of items had to be stored in scanner's buffer in average. Only 0.2\% of items had to be stored in scanner's buffer in average during execution of generated schedule with inserted idle times.
 
-For future work, the scheduler could be further improved by analyzing the different objectives of this problem and designing a proper genetic algorithm that can further improve existing scheduler more efficiently. That can be further extended to the area of machine learning. Another, more software oriented, potential future work is to further work on the development of the scheduler and its integration in the simulator to add more practical value to it.
+For future work, the scheduler could be further improved by analyzing the different objectives of this problem and designing a proper genetic algorithm that can further improve existing scheduler more efficiently. That can be further extended to the area of machine learning.
 
 
 \bibliographystyle{plain}
